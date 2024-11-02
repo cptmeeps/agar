@@ -260,10 +260,10 @@ def process_spawn_phase(game_state: GameState) -> GameState:
         turn_state=game_state.turn_state
     )
 
-def is_game_over(game_state: GameState) -> bool:
+def is_game_over(game_state: GameState) -> Tuple[bool, str]:
     # Check for turn limit
     if game_state.turn_number > 100:
-        return True
+        return True, "Turn limit reached (100 turns)"
         
     # Count units for each player
     player1_units = 0
@@ -278,12 +278,18 @@ def is_game_over(game_state: GameState) -> bool:
                 player2_units += 1
     
     # Game is over if either player has no units
-    return player1_units == 0 or player2_units == 0
-
-def run_game(initial_state: GameState) -> GameState:
-    current_state = initial_state
+    if player1_units == 0:
+        return True, "Player 2 wins - Player 1 was eliminated!"
+    if player2_units == 0:
+        return True, "Player 1 wins - Player 2 was eliminated!"
     
-    while not is_game_over(current_state):
+    return False, ""
+
+def run_game(initial_state: GameState) -> Tuple[GameState, str]:
+    current_state = initial_state
+    game_over, reason = is_game_over(current_state)
+    
+    while not game_over:
         if current_state.turn_state.phase == Phase.MOVEMENT:
             # Display game state to both players
             display_game_state(current_state)
@@ -307,8 +313,10 @@ def run_game(initial_state: GameState) -> GameState:
         else:  # SPAWN phase
             current_state = process_spawn_phase(current_state)
             current_state = advance_phase(current_state)
+        
+        game_over, reason = is_game_over(current_state)
     
-    return current_state
+    return current_state, reason
 
 def display_game_state(game_state: GameState) -> None:
     print("\n=== Game State ===")
@@ -317,9 +325,69 @@ def display_game_state(game_state: GameState) -> None:
     print("\nTiles:")
     for pos, tile in game_state.tiles.items():
         if tile.units:  # Only show tiles with units
+            # Count units per player
+            p1_units = sum(1 for unit in tile.units if unit.player_id == 1)
+            p2_units = sum(1 for unit in tile.units if unit.player_id == 2)
             print(f"\nPosition {pos}:")
-            for unit in tile.units:
-                print(f"  Player {unit.player_id} {unit.unit_type.value}: "
-                      f"HP={unit.health}, MP={unit.movement_points}")
+            if p1_units > 0:
+                print(f"  Player 1 units: {p1_units}")
+            if p2_units > 0:
+                print(f"  Player 2 units: {p2_units}")
     print("\n================\n")
+
+def main():
+    # Initialize game with a 10x10 hexagonal board (radius = 5)
+    initial_state = create_game_state(5)
+    initial_tiles = dict(initial_state.tiles)
+    
+    # Find leftmost and rightmost valid tiles
+    leftmost_pos = min(initial_tiles.keys(), key=lambda x: x[0])  # smallest q
+    rightmost_pos = max(initial_tiles.keys(), key=lambda x: x[0]) # largest q
+    
+    # Add single unit for player 1 at leftmost tile
+    start_unit_p1 = Unit(
+        unit_type=UnitType.WARRIOR,
+        player_id=1,
+        health=10,
+        movement_points=1
+    )
+    initial_tiles[leftmost_pos] = Tile(
+        Position(*leftmost_pos),
+        TerrainType.PLAINS,
+        [start_unit_p1]
+    )
+    
+    # Add single unit for player 2 at rightmost tile
+    start_unit_p2 = Unit(
+        unit_type=UnitType.WARRIOR,
+        player_id=2,
+        health=10,
+        movement_points=1
+    )
+    initial_tiles[rightmost_pos] = Tile(
+        Position(*rightmost_pos),
+        TerrainType.PLAINS,
+        [start_unit_p2]
+    )
+    
+    # Create new initial state with units
+    initial_state = GameState(
+        tiles=initial_tiles,
+        turn_number=1,
+        turn_state=TurnState(phase=Phase.MOVEMENT)
+    )
+    
+    # Run the game
+    print("Starting game...")
+    print(f"\nPlayer 1 starts at {leftmost_pos}")
+    print(f"Player 2 starts at {rightmost_pos}")
+    final_state, end_reason = run_game(initial_state)
+    
+    # Display final state
+    print("\nGame Over!")
+    print(f"Reason: {end_reason}")
+    display_game_state(final_state)
+
+if __name__ == "__main__":
+    main()
 
