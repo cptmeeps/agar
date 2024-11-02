@@ -3,6 +3,9 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional, Any, Union
 from enum import Enum, auto
+import random
+from anthropic import Anthropic
+import os
 
 # Type definitions
 class TerrainType(Enum):
@@ -43,350 +46,121 @@ class TurnState:
 
 @dataclass(frozen=True)
 class GameState:
-    tiles: Dict[Tuple[int, int], Tile]
-    turn_number: int
-    turn_state: TurnState
+    world: Dict[Tuple[int, int], Tile]
+    current_turn: int
+    max_turns: int
+    num_players: int
+    current_phase: str
+    game_end_criteria: Dict[str, Any]
+    # Add any other state you want to track
 
-@dataclass(frozen=True)
-class MoveAction:
-    unit_position: Position
-    target_position: Position
+class Action:
+    def apply(self, game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
+        raise NotImplementedError("Action must implement apply()")
 
-@dataclass(frozen=True)
-class CombatAction:
-    position: Position  # Combat happens automatically at this position
+class MoveAction(Action):
+    def apply(self, game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
+        # Implementation for movement
+        pass
 
-@dataclass(frozen=True)
-class SpawnAction:
-    position: Position
+class CombatAction(Action):
+    def apply(self, game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
+        # Implementation for combat
+        pass
 
-# Union type for all possible actions
-ActionType = Union[MoveAction, CombatAction, SpawnAction]
+class SpawnAction(Action):
+    def apply(self, game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
+        # Implementation for spawning
+        pass
 
-def create_game_state(size: int) -> GameState:
-    tiles = {}
+class Phase:
+    def __init__(self, name: str, actions: List[Action]):
+        self.name = name
+        self.actions = actions
+    
+    def execute(self, game_state: GameState) -> GameState:
+        new_state = game_state
+        for hex_pos in game_state.world.keys():
+            for action in self.actions:
+                new_state = action.apply(new_state, hex_pos)
+        return new_state
+
+def create_game_state(config: Dict[str, Any]) -> GameState:
+    # Create initial game state based on config
+    world = {}
+    size = config.get('board_size', 5)
+    
+    # Create hexagonal board
     for q in range(-size, size + 1):
         r1 = max(-size, -q - size)
         r2 = min(size, -q + size)
         for r in range(r1, r2 + 1):
-            pos = Position(q, r)
-            tiles[(q, r)] = Tile(pos, TerrainType.PLAINS)
+            pos = (q, r)
+            world[pos] = Tile(Position(q, r), TerrainType.PLAINS)
     
-    initial_turn_state = TurnState(phase=Phase.MOVEMENT)
     return GameState(
-        tiles=tiles,
-        turn_number=1,
-        turn_state=initial_turn_state
+        world=world,
+        current_turn=1,
+        max_turns=config.get('max_turns', 100),
+        num_players=config.get('num_players', 2),
+        current_phase='movement',
+        game_end_criteria=config.get('end_criteria', {'type': 'elimination'})
     )
 
-def advance_phase(game_state: GameState) -> GameState:
-    current_phase = game_state.turn_state.phase
+def turn(game_state: GameState, phases: List[Phase]) -> GameState:
+    new_state = game_state
     
-    if current_phase == Phase.MOVEMENT:
-        new_phase = Phase.COMBAT
-    elif current_phase == Phase.COMBAT:
-        new_phase = Phase.SPAWN
-    else:  # SPAWN phase
-        new_phase = Phase.MOVEMENT
-        # Only increment turn during phase transition
-        new_turn = game_state.turn_number + 1
-        return GameState(
-            tiles=game_state.tiles,
-            turn_number=new_turn,
-            turn_state=TurnState(phase=new_phase)
+    for phase in phases:
+        new_state = phase.execute(new_state)
+        # Update current phase
+        new_state = GameState(
+            **{**new_state.__dict__, 'current_phase': phase.name}
         )
     
+    # Increment turn counter
     return GameState(
-        tiles=game_state.tiles,
-        turn_number=game_state.turn_number,
-        turn_state=TurnState(phase=new_phase)
-    )
-
-def execute_turn_action(game_state: GameState, action: ActionType, player_id: int) -> GameState:
-    if isinstance(action, MoveAction):
-        return _apply_move(game_state, action, player_id)
-    elif isinstance(action, CombatAction):
-        return _apply_combat(game_state, action)
-    else:  # SpawnAction
-        return process_spawn_phase(game_state)  # Spawn phase now handles both players
-
-def apply_action(game_state: GameState, action: ActionType) -> GameState:
-    if isinstance(action, MoveAction):
-        return _apply_move(game_state, action)
-    elif isinstance(action, CombatAction):
-        return _apply_combat(game_state, action)
-    else:  # SpawnAction
-        return _apply_spawn(game_state, action)
-
-# Move-related functions
-def _apply_move(game_state: GameState, action: MoveAction, player_id: int) -> GameState:
-    source_pos = (action.unit_position.q, action.unit_position.r)
-    target_pos = (action.target_position.q, action.target_position.r)
-    
-    source_tile = game_state.tiles[source_pos]
-    target_tile = game_state.tiles[target_pos]
-    
-    # Find the first unit belonging to the specified player
-    unit_to_move = next(unit for unit in source_tile.units 
-                       if unit.player_id == player_id)
-    
-    # Create new unit lists
-    new_source_units = [u for u in source_tile.units if u != unit_to_move]
-    new_target_units = list(target_tile.units) + [unit_to_move]
-    
-    # Create new tiles
-    new_tiles = dict(game_state.tiles)
-    new_tiles[source_pos] = Tile(source_tile.position, source_tile.terrain, new_source_units)
-    new_tiles[target_pos] = Tile(target_tile.position, target_tile.terrain, new_target_units)
-    
-    return GameState(
-        tiles=new_tiles,
-        turn_number=game_state.turn_number,
-        turn_state=game_state.turn_state
-    )
-
-def get_player_moves(game_state: GameState, player_id: int) -> List[MoveAction]:
-    # TODO: Implement actual player input logic
-    return []
-
-# Combat-related functions
-def _apply_combat(game_state: GameState, action: CombatAction) -> GameState:
-    pos = (action.position.q, action.position.r)
-    tile = game_state.tiles[pos]
-    
-    # Separate units by player
-    player1_units = [u for u in tile.units if u.player_id == 1]
-    player2_units = [u for u in tile.units if u.player_id == 2]
-    
-    # Calculate total damage for each side
-    p1_damage = len(player1_units) * 3  # 3 damage per unit as per README
-    p2_damage = len(player2_units) * 3
-    
-    # Calculate damage per unit
-    p1_damage_per_unit = p2_damage / len(player1_units) if player1_units else 0
-    p2_damage_per_unit = p1_damage / len(player2_units) if player2_units else 0
-    
-    # Apply damage and filter out dead units
-    surviving_units = []
-    for unit in player1_units + player2_units:
-        damage = p1_damage_per_unit if unit.player_id == 2 else p2_damage_per_unit
-        new_health = unit.health - damage
-        if new_health > 0:
-            surviving_units.append(Unit(
-                unit_type=unit.unit_type,
-                player_id=unit.player_id,
-                health=new_health,
-                movement_points=unit.movement_points
-            ))
-    
-    # Update tile with surviving units
-    new_tiles = dict(game_state.tiles)
-    new_tiles[pos] = Tile(tile.position, tile.terrain, surviving_units)
-    
-    return GameState(
-        tiles=new_tiles,
-        turn_number=game_state.turn_number,
-        turn_state=game_state.turn_state
-    )
-
-def process_combat_phase(game_state: GameState) -> GameState:
-    new_tiles = dict(game_state.tiles)
-    
-    # Find all tiles with units from both players
-    for pos, tile in game_state.tiles.items():
-        player1_units = [u for u in tile.units if u.player_id == 1]
-        player2_units = [u for u in tile.units if u.player_id == 2]
-        
-        if player1_units and player2_units:
-            # Create and apply combat action for this position
-            combat_action = CombatAction(Position(pos[0], pos[1]))
-            game_state = _apply_combat(game_state, combat_action)
-    
-    return game_state
-
-# Spawn-related functions
-def _apply_spawn(game_state: GameState, action: SpawnAction) -> GameState:
-    pos = (action.position.q, action.position.r)
-    tile = game_state.tiles[pos]
-    
-    # Create new unit
-    new_unit = Unit(
-        unit_type=UnitType.WARRIOR,
-        player_id=game_state.current_player,
-        health=10,  # Initial health as per README
-        movement_points=1
-    )
-    
-    # Add new unit to tile
-    new_units = list(tile.units) + [new_unit]
-    
-    # Update tile
-    new_tiles = dict(game_state.tiles)
-    new_tiles[pos] = Tile(tile.position, tile.terrain, new_units)
-    
-    return GameState(
-        tiles=new_tiles,
-        turn_number=game_state.turn_number,
-        turn_state=game_state.turn_state
-    )
-
-def process_spawn_phase(game_state: GameState) -> GameState:
-    new_tiles = dict(game_state.tiles)
-    
-    # Process spawns for both players
-    for player_id in [1, 2]:
-        # Find all valid spawn locations for current player
-        for pos, tile in game_state.tiles.items():
-            player_units = [u for u in tile.units if u.player_id == player_id]
-            enemy_units = [u for u in tile.units if u.player_id != player_id]
-            
-            # If we have units and no enemy units, this is a valid spawn location
-            if player_units and not enemy_units:
-                # Create new unit
-                new_unit = Unit(
-                    unit_type=UnitType.WARRIOR,
-                    player_id=player_id,
-                    health=10,
-                    movement_points=1
-                )
-                
-                # Add new unit to tile
-                new_units = list(tile.units) + [new_unit]
-                new_tiles[pos] = Tile(tile.position, tile.terrain, new_units)
-    
-    return GameState(
-        tiles=new_tiles,
-        turn_number=game_state.turn_number,
-        turn_state=game_state.turn_state
+        **{**new_state.__dict__, 'current_turn': new_state.current_turn + 1}
     )
 
 def is_game_over(game_state: GameState) -> Tuple[bool, str]:
-    # Check for turn limit
-    if game_state.turn_number > 100:
-        return True, "Turn limit reached (100 turns)"
-        
-    # Count units for each player
-    player1_units = 0
-    player2_units = 0
-    
-    # Check all tiles for units
-    for tile in game_state.tiles.values():
-        for unit in tile.units:
-            if unit.player_id == 1:
-                player1_units += 1
-            elif unit.player_id == 2:
-                player2_units += 1
-    
-    # Game is over if either player has no units
-    if player1_units == 0:
-        return True, "Player 2 wins - Player 1 was eliminated!"
-    if player2_units == 0:
-        return True, "Player 1 wins - Player 2 was eliminated!"
-    
-    return False, ""
+    # Implementation based on game_state.game_end_criteria
+    pass
 
-def run_game(initial_state: GameState) -> Tuple[GameState, str]:
-    current_state = initial_state
-    game_over, reason = is_game_over(current_state)
+def run_game(config: Dict[str, Any]) -> Tuple[GameState, str]:
+    # Create initial game state
+    game_state = create_game_state(config)
+    
+    # Define phases with their actions
+    game_phases = [
+        Phase('movement', [MoveAction()]),
+        Phase('combat', [CombatAction()]),
+        Phase('spawn', [SpawnAction()])
+    ]
+    
+    # Main game loop
+    game_over = False
+    reason = ""
     
     while not game_over:
-        if current_state.turn_state.phase == Phase.MOVEMENT:
-            # Display game state to both players
-            display_game_state(current_state)
-            
-            # Get moves from both players simultaneously
-            player1_moves = get_player_moves(current_state, 1)
-            player2_moves = get_player_moves(current_state, 2)
-            
-            # Apply all movement actions
-            for move in player1_moves:
-                current_state = execute_turn_action(current_state, move, 1)
-            for move in player2_moves:
-                current_state = execute_turn_action(current_state, move, 2)
-            
-            current_state = advance_phase(current_state)
-            
-        elif current_state.turn_state.phase == Phase.COMBAT:
-            current_state = process_combat_phase(current_state)
-            current_state = advance_phase(current_state)
-            
-        else:  # SPAWN phase
-            current_state = process_spawn_phase(current_state)
-            current_state = advance_phase(current_state)
-        
-        game_over, reason = is_game_over(current_state)
+        game_state = turn(game_state, game_phases)
+        game_over, reason = is_game_over(game_state)
     
-    return current_state, reason
-
-def display_game_state(game_state: GameState) -> None:
-    print("\n=== Game State ===")
-    print(f"Turn Number: {game_state.turn_number}")
-    print(f"Current Phase: {game_state.turn_state.phase.name}")
-    print("\nTiles:")
-    for pos, tile in game_state.tiles.items():
-        if tile.units:  # Only show tiles with units
-            # Count units per player
-            p1_units = sum(1 for unit in tile.units if unit.player_id == 1)
-            p2_units = sum(1 for unit in tile.units if unit.player_id == 2)
-            print(f"\nPosition {pos}:")
-            if p1_units > 0:
-                print(f"  Player 1 units: {p1_units}")
-            if p2_units > 0:
-                print(f"  Player 2 units: {p2_units}")
-    print("\n================\n")
+    return game_state, reason
 
 def main():
-    # Initialize game with a 10x10 hexagonal board (radius = 5)
-    initial_state = create_game_state(5)
-    initial_tiles = dict(initial_state.tiles)
+    # Example configuration
+    config = {
+        'board_size': 5,
+        'max_turns': 100,
+        'num_players': 2,
+        'end_criteria': {
+            'type': 'elimination',
+            'turn_limit': 100
+        }
+    }
     
-    # Find leftmost and rightmost valid tiles
-    leftmost_pos = min(initial_tiles.keys(), key=lambda x: x[0])  # smallest q
-    rightmost_pos = max(initial_tiles.keys(), key=lambda x: x[0]) # largest q
-    
-    # Add single unit for player 1 at leftmost tile
-    start_unit_p1 = Unit(
-        unit_type=UnitType.WARRIOR,
-        player_id=1,
-        health=10,
-        movement_points=1
-    )
-    initial_tiles[leftmost_pos] = Tile(
-        Position(*leftmost_pos),
-        TerrainType.PLAINS,
-        [start_unit_p1]
-    )
-    
-    # Add single unit for player 2 at rightmost tile
-    start_unit_p2 = Unit(
-        unit_type=UnitType.WARRIOR,
-        player_id=2,
-        health=10,
-        movement_points=1
-    )
-    initial_tiles[rightmost_pos] = Tile(
-        Position(*rightmost_pos),
-        TerrainType.PLAINS,
-        [start_unit_p2]
-    )
-    
-    # Create new initial state with units
-    initial_state = GameState(
-        tiles=initial_tiles,
-        turn_number=1,
-        turn_state=TurnState(phase=Phase.MOVEMENT)
-    )
-    
-    # Run the game
-    print("Starting game...")
-    print(f"\nPlayer 1 starts at {leftmost_pos}")
-    print(f"Player 2 starts at {rightmost_pos}")
-    final_state, end_reason = run_game(initial_state)
-    
-    # Display final state
-    print("\nGame Over!")
-    print(f"Reason: {end_reason}")
-    display_game_state(final_state)
+    final_state, end_reason = run_game(config)
+    print(f"Game Over! {end_reason}")
 
 if __name__ == "__main__":
     main()
