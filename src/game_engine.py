@@ -1,5 +1,3 @@
-# Strategy game built using functional programming principles in Python.
-
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional, Any, Union
 from enum import Enum, auto
@@ -38,28 +36,18 @@ class GameState:
   current_turn_input: Dict[str, Any]
 
 def get_input_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
-  # Placeholder for external service calls
-  player_one_moves = {
-    'moves': [
-      {'source': (0, 0), 'destination': (1, 0), 'units': 3},
-      {'source': (2, 0), 'destination': (2, 1), 'units': 2}
-    ]
-  }
-  player_two_moves = {
-    'moves': [
-      {'source': (-1, 0), 'destination': (-2, 0), 'units': 1},
-      {'source': (0, 0), 'destination': (0, 1), 'units': 2}
-    ]
-  }
+  # Get moves from both AIs
+  player_one_moves = get_ai_moves(game_state, 1)
+  player_two_moves = get_ai_moves(game_state, 2)
   
   # Combine and restructure moves by source hex
   all_moves = {}
   for move in player_one_moves['moves'] + player_two_moves['moves']:
-    source = move['source']
+    source = tuple(move['source'])  # Convert [q, r] to (q, r)
     if source not in all_moves:
       all_moves[source] = []
     all_moves[source].append({
-      'destination': move['destination'],
+      'destination': tuple(move['destination']),  # Convert [q, r] to (q, r)
       'units': move['units']
     })
   
@@ -212,7 +200,6 @@ def turn_end_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameStat
   
   return game_state
 
-# Update the turn function to use the new action functions
 def turn(game_state: GameState) -> GameState:
   new_state = game_state
   
@@ -255,6 +242,71 @@ def create_game_state(config: Dict[str, Any]) -> GameState:
     game_status="in_progress",
     game_end_criteria=config.get('end_criteria', {'type': 'elimination'})
   )
+
+def create_llm_world_representation(game_state: GameState, player_id: int) -> Dict[str, Any]:
+    """
+    Creates a player-specific structured representation of the game world for LLM consumption.
+    
+    Args:
+        game_state: Current state of the game
+        player_id: The player (1 or 2) for whom this representation is being created
+    """
+    opponent_id = 2 if player_id == 1 else 1
+    
+    world_representation = {
+        "game_info": {
+            "current_turn": game_state.current_turn,
+            "max_turns": game_state.max_turns,
+            "game_status": game_state.game_status
+        },
+        "board": {
+            "controlled_territories": {
+                "your_territory": [],
+                "enemy_territory": []
+            },
+            "hexes": []
+        }
+    }
+
+    # Process each hex
+    for pos, tile in game_state.world.items():
+        q, r = pos
+        
+        # Group units by player
+        units_count = {
+            "your_units": 0,
+            "enemy_units": 0
+        }
+        
+        # Count units
+        for unit in tile.units:
+            if unit.player_id == player_id:
+                units_count["your_units"] += 1
+            else:
+                units_count["enemy_units"] += 1
+
+        # Determine hex control
+        controlling_player = None
+        if units_count["your_units"] > 0 and units_count["enemy_units"] == 0:
+            controlling_player = "you"
+            world_representation["board"]["controlled_territories"]["your_territory"].append(
+                {"q": q, "r": r}
+            )
+        elif units_count["enemy_units"] > 0 and units_count["your_units"] == 0:
+            controlling_player = "enemy"
+            world_representation["board"]["controlled_territories"]["enemy_territory"].append(
+                {"q": q, "r": r}
+            )
+
+        # Create hex representation
+        hex_info = {
+            "position": {"q": q, "r": r},
+            "units": units_count,
+            "controlled_by": controlling_player
+        }
+        world_representation["board"]["hexes"].append(hex_info)
+
+    return world_representation
 
 def main():
   config = {

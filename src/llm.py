@@ -58,6 +58,46 @@ def pretty_print_message_chain(message_chain: List[Dict[str, str]]) -> None:
     print(f"  Content:\n{message['content']}")
     print("-" * 50)
 
+def load_game_prompts() -> str:
+    prompt_path = "src/prompts/game_prompts.yaml"
+    with open(prompt_path, 'r') as f:
+        return f.read()
+
+def create_strategic_prompt(game_state: GameState, player_id: int) -> List[Dict[str, str]]:
+    # Get the world representation
+    world_representation = create_llm_world_representation(game_state, player_id)
+    
+    # Load and prepare the prompt template
+    prompt_template = load_game_prompts()
+    game_state_yaml = yaml.dump(world_representation, sort_keys=False)
+    
+    # Create the message chain
+    message_chain = create_message_chain(prompt_template)
+    
+    # Find and update the game state analysis message
+    for message in message_chain:
+        if message['role'] == 'user':
+            message['content'] = message['content'].format(
+                game_state_yaml=game_state_yaml
+            )
+    
+    return message_chain
+
+def get_ai_moves(game_state: GameState, player_id: int) -> Dict[str, Any]:
+    """
+    Gets strategic moves from the LLM for the specified player.
+    """
+    message_chain = create_strategic_prompt(game_state, player_id)
+    response = call_llm_api(message_chain)
+    
+    try:
+        # Parse the response into the expected move format
+        moves = yaml.safe_load(response)
+        return moves
+    except yaml.YAMLError:
+        # Fallback to empty moves if parsing fails
+        return {"moves": []}
+
 # Main section with example usage
 if __name__ == "__main__":
   # Example 1: Using YAML template directly
