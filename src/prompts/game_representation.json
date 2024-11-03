@@ -1,0 +1,36 @@
+{
+    "game_info": {
+        "current_turn": 1,
+        "max_turns": 100,
+        "game_status": "in_progress"
+    },
+    "board": {
+        "controlled_territories": {
+            "your_territory": [
+                {"q": 0, "r": 0},
+                {"q": 1, "r": 0}
+            ],
+            "enemy_territory": [
+                {"q": -1, "r": 0}
+            ]
+        },
+        "hexes": [
+            {
+                "position": {"q": 0, "r": 0},
+                "units": {
+                    "your_units": 3,
+                    "enemy_units": 0
+                },
+                "controlled_by": "you"
+            },
+            {
+                "position": {"q": 1, "r": 0},
+                "units": {
+                    "your_units": 2,
+                    "enemy_units": 1
+                },
+                "controlled_by": null
+            }
+        ]
+    }
+}
