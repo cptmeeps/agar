@@ -3,11 +3,11 @@ from typing import Dict, List, Tuple, Any
 
 @dataclass(frozen=True)
 class Position:
-  q: int 
-  r: int
-  
-  def __add__(self, other: 'Position') -> 'Position':
-    return Position(self.q + other.q, self.r + other.r)
+    x: int 
+    y: int
+    
+    def __add__(self, other: 'Position') -> 'Position':
+        return Position(self.x + other.x, self.y + other.y)
 
 @dataclass(frozen=True)
 class Unit:

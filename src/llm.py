@@ -8,6 +8,13 @@ def load_prompt_from_file(prompt_path: str) -> str:
   with open(prompt_path, 'r') as f:
     return f.read()
 
+def load_game_prompts(filename: str) -> str:
+  prompt_path = f"src/prompts/{filename}"
+  try:
+    return load_prompt_from_file(prompt_path)
+  except FileNotFoundError:
+    raise FileNotFoundError(f"Could not find prompt file at {prompt_path}")
+
 # Functions
 def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
   # pretty_print_message_chain(message_chain)

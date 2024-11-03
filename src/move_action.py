@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Any
-from ..game_engine import GameState, Tile
+from game_types import GameState, Tile
 
 def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     # If no moves exist or this hex isn't a source of any moves, return unchanged

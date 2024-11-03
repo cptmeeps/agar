@@ -1,8 +1,8 @@
 from typing import Dict, Tuple, Any
 import yaml
-from ..game_types import GameState
-from ..llm import create_message_chain, call_llm_api, load_game_prompts
-from ..utils import create_sample_game_state
+from game_types import GameState
+from llm import create_message_chain, call_llm_api, load_game_prompts
+from utils import create_sample_game_state
 
 def create_llm_world_representation(game_state: GameState, player_id: int) -> Dict[str, Any]:
     opponent_id = 2 if player_id == 1 else 1
@@ -18,13 +18,13 @@ def create_llm_world_representation(game_state: GameState, player_id: int) -> Di
                 "your_territory": [],
                 "enemy_territory": []
             },
-            "hexes": []
+            "cells": []
         }
     }
 
-    # Process each hex
+    # Process each cell
     for pos, tile in game_state.world.items():
-        q, r = pos
+        x, y = pos
         
         # Group units by player
         units_count = {
@@ -39,26 +39,26 @@ def create_llm_world_representation(game_state: GameState, player_id: int) -> Di
             else:
                 units_count["enemy_units"] += 1
 
-        # Determine hex control
+        # Determine cell control
         controlling_player = None
         if units_count["your_units"] > 0 and units_count["enemy_units"] == 0:
             controlling_player = "you"
             world_representation["board"]["controlled_territories"]["your_territory"].append(
-                {"q": q, "r": r}
+                {"x": x, "y": y}
             )
         elif units_count["enemy_units"] > 0 and units_count["your_units"] == 0:
             controlling_player = "enemy"
             world_representation["board"]["controlled_territories"]["enemy_territory"].append(
-                {"q": q, "r": r}
+                {"x": x, "y": y}
             )
 
-        # Create hex representation
-        hex_info = {
-            "position": {"q": q, "r": r},
+        # Create cell representation
+        cell_info = {
+            "position": {"x": x, "y": y},
             "units": units_count,
             "controlled_by": controlling_player
         }
-        world_representation["board"]["hexes"].append(hex_info)
+        world_representation["board"]["cells"].append(cell_info)
 
     return world_representation
 

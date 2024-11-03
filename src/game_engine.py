@@ -1,13 +1,12 @@
 from typing import Dict, Tuple, Any
 import yaml
-from .game_types import GameState, Position, Tile
-from .actions import (
-  get_input_action,
-  move_action,
-  combat_action,
-  spawn_action,
-  turn_end_action
-)
+from game_types import GameState, Position, Tile
+from input_action import get_input_action
+from move_action import move_action
+from combat_action import combat_action
+from spawn_action import spawn_action
+from turn_end_action import turn_end_action
+from utils import create_sample_game_state, print_game_state
 
 def turn(game_state: GameState) -> GameState:
   new_state = game_state
@@ -28,12 +27,11 @@ def create_game_state(config: Dict[str, Any]) -> GameState:
   world = {}
   size = config.get('board_size', 5)
   
-  for q in range(-size, size + 1):
-    r1 = max(-size, -q - size)
-    r2 = min(size, -q + size)
-    for r in range(r1, r2 + 1):
-      pos = (q, r)
-      world[pos] = Tile(Position(q, r))
+  # Create a rectangular grid
+  for x in range(size):
+    for y in range(size):
+      pos = (x, y)
+      world[pos] = Tile(Position(x, y))
   
   return GameState(
     world=world,
@@ -44,26 +42,18 @@ def create_game_state(config: Dict[str, Any]) -> GameState:
     game_end_criteria=config.get('end_criteria', {'type': 'elimination'})
   )
 
-def run_game(config: Dict[str, Any]) -> Tuple[GameState, str]:
-  game_state = create_game_state(config)
+def run_game(config: Dict[str, Any]) -> GameState:
+  game_state = create_game_state(config) if config else create_sample_game_state()
+  print_game_state(game_state)
   
   while game_state.game_status != "game_over":
     game_state = turn(game_state)
+    print_game_state(game_state)
   
   return game_state
 
 def main():
-  config = {
-    'board_size': 5,
-    'max_turns': 100,
-    'num_players': 2,
-    'end_criteria': {
-      'type': 'elimination',
-      'turn_limit': 100
-    }
-  }
-  
-  game_state = run_game(config)
+  game_state = run_game(None)  # Pass None to use sample game state
   print("Game Over")
 
 if __name__ == "__main__":
