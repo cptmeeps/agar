@@ -10,3 +10,5 @@ fi
 pip freeze > requirements.txt
 
 echo "Requirements file generated successfully!" 
+
+# pip install -r requirements.txt

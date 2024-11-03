@@ -11,3 +11,5 @@ pip install anthropic pyyaml
 ./scripts/generate_requirements.sh
 
 echo "Setup completed successfully!" 
+
+# pip install -r requirements.txt 

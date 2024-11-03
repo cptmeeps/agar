@@ -1,7 +1,14 @@
 # Imports
 import yaml
+import os
 from typing import List, Dict, Any, Tuple
 from anthropic import Anthropic
+
+
+
+def load_prompt_from_file(prompt_path: str) -> str:
+  with open(prompt_path, 'r') as f:
+    return f.read()
 
 # Functions
 def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
@@ -13,7 +20,7 @@ def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
     response = client.messages.create(
       model="claude-3-5-sonnet-20240620",
       max_tokens=4096,
-      temperature=0.3,
+      temperature=0.1,
       messages=updated_chain,
       system=system_message
     )
@@ -22,7 +29,6 @@ def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
     return f"Error calling Anthropic API: {str(e)}"
 
 def create_message_chain(yaml_template: str) -> List[Dict[str, str]]:
-  """Creates a message chain from a YAML string template."""
   template = yaml.safe_load(yaml_template)
   message_chain = [{'role': msg['role'], 'content': msg['content']} for msg in template]
 
@@ -33,7 +39,6 @@ def create_message_chain(yaml_template: str) -> List[Dict[str, str]]:
   return message_chain
 
 def extract_system_message(message_chain: List[Dict[str, str]]) -> Tuple[str, List[Dict[str, str]]]:
-  """Extracts the system message from the message chain."""
   system_message = ""
   updated_chain = []
   for message in message_chain:
@@ -44,11 +49,9 @@ def extract_system_message(message_chain: List[Dict[str, str]]) -> Tuple[str, Li
   return system_message, updated_chain
 
 def process_model_output(response: Any) -> str:
-  """Processes the output from the Anthropic API."""
   return response.content[0].text
 
 def pretty_print_message_chain(message_chain: List[Dict[str, str]]) -> None:
-  """Pretty prints the message chain for easy examination."""
   for i, message in enumerate(message_chain):
     print(f"Message {i + 1}:")
     print(f"  Role: {message['role']}")
@@ -57,35 +60,38 @@ def pretty_print_message_chain(message_chain: List[Dict[str, str]]) -> None:
 
 # Main section with example usage
 if __name__ == "__main__":
-  # Example usage of create_message_chain
+  # Example 1: Using YAML template directly
   yaml_template = """
-- name: system instructions
-  role: system
-  content: |
-    You are a concise software engineer assistant. Here are some suggestions:
-    - You get straight to the point and do not waste any words.
-    - Do not add any pleasantries in your response.
+  - name: system instructions
+    role: system
+    content: |
+      You are a concise software engineer assistant. Here are some suggestions:
+      - You get straight to the point and do not waste any words.
+      - Do not add any pleasantries in your response.
 
-- name: example 1 query
-  role: user
-  content: |
-    Tell me 3 facts about the color red.
+  - name: example 1 query
+    role: user
+    content: |
+      Tell me 3 facts about the color red.
   """
 
   message_chain = create_message_chain(yaml_template)
-  print("Created message chain:")
-  # pretty_print_message_chain(message_chain)
-
-  # Example usage loading yaml from doc
-  drive_service, doc_service, sheets_service = authenticate()
-  folder_path = '/content/drive/My Drive/mtc/prompts'
-  doc_id = '1rOfUxEsLdjREYG0uP0wL2Mnp0u02Hv3Zr_8SamTvVBk' # test_key_ideas
-  prompt_template = read_doc(doc_service, doc_id)
-  message_chain = create_message_chain(prompt_template)
-  print("Message chain from document:")
+  print("Example 1 - Created message chain from YAML:")
   pretty_print_message_chain(message_chain)
-
-  # Example usage of call_llm_api
   api_response = call_llm_api(message_chain)
   print("\nAPI Response:")
   print(api_response)
+
+  # Example 2: Loading prompt from file
+  print("\n" + "="*50 + "\n")
+  prompt_path = "prompts/test.txt"
+  try:
+    file_yaml = load_prompt_from_file(prompt_path)
+    file_message_chain = create_message_chain(file_yaml)
+    print("Example 2 - Created message chain from file:")
+    pretty_print_message_chain(file_message_chain)
+    file_api_response = call_llm_api(file_message_chain)
+    print("\nAPI Response:")
+    print(file_api_response)
+  except FileNotFoundError:
+    print(f"Error: Could not find prompt file at {prompt_path}")
