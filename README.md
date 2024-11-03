@@ -19,43 +19,39 @@ This project implements a hexagonal grid-based strategy game using pure function
 - Multiple units from the same player can occupy the same hex
 - Units can move through hexes occupied by friendly units
 - Each unit has:
-  - Health: 10 hit points
-  - Damage: 3 damage per combat phase
+  - Health: 1 hit point
+  - Movement: 1 point per turn
 
 ### Game Flow
-The game proceeds in turns, with each turn divided into three distinct phases:
+The game proceeds in turns, with each turn divided into four distinct phases:
 
-1. **Movement Phase**
-   - Active player can move their units to adjacent hexes
-   - Each unit can move only once per turn
-   - Units can move into hexes containing friendly units
+1. **Input Collection Phase**
+   - Game collects and validates movement orders from both players
+   - Each order specifies source hex, destination hex, and number of units to move
 
-2. **Combat Phase**
+2. **Movement Phase**
+   - Units are moved according to collected orders
+   - Multiple units can move from a single source hex to different destinations
+   - Invalid moves are skipped (e.g., if destination is invalid or not enough units available)
+
+3. **Combat Phase**
    - Combat occurs when units from opposing players occupy the same hex
-   - All combat is resolved simultaneously using the following rules:
-     - Each unit deals its damage to all enemy units in the same hex
-     - Total damage from each side is calculated by multiplying:
-       (Number of units) × (Damage per unit)
-     - Damage is distributed equally among all enemy units
-     - Units that reach 0 health or below are removed from the game
-   - Example:
-     - Player A has 2 units (20 total HP, deals 6 damage)
-     - Player B has 3 units (30 total HP, deals 9 damage)
-     - After combat:
-       - Each of Player A's units takes 4.5 damage (9 damage ÷ 2 units)
-       - Each of Player B's units takes 2 damage (6 damage ÷ 3 units)
-       - Player A units remain with 5.5 HP each
-       - Player B units remain with 8 HP each
-   - Combat continues in subsequent turns until one side is eliminated or units move away
+   - Combat is resolved using a dice-roll system:
+     - Each player rolls once (1-10)
+     - Success occurs on rolls of 5 or higher (60% chance)
+     - On success, damage equals the number of attacking units
+     - Units are removed based on damage received
+   - Combat is simultaneous, using initial unit counts for damage calculation
 
-3. **Spawn Phase**
-   - New units spawn at the end of each turn
-   - Spawning occurs in hexes where a player has at least one unit
-   - A hex is considered valid for spawning if no enemy units are present in that hex
-   - One new unit spawns per valid spawn location, regardless of how many friendly units occupy that hex
+4. **Spawn Phase**
+   - New units spawn in hexes controlled by a single player
+   - One new unit spawns per controlled hex
+   - Spawned units have 1 health and 1 movement point
 
 ### Victory Conditions
-[To be defined - we should add win conditions such as controlling majority of the board or eliminating all enemy units]
+The game can end in two ways:
+1. A player is eliminated (has no remaining units)
+2. Maximum turn limit is reached (default: 100 turns)
 
 ## Technical Implementation
 
