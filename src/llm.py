@@ -3,6 +3,7 @@ import yaml
 import os
 from typing import List, Dict, Any, Tuple
 from anthropic import Anthropic
+from string import Template
 
 def load_prompt_from_file(prompt_path: str) -> str:
   with open(prompt_path, 'r') as f:
@@ -25,26 +26,34 @@ def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
     response = client.messages.create(
       model="claude-3-5-sonnet-20240620",
       max_tokens=4096,
-      temperature=0.1,
+      temperature=0.0,
       messages=updated_chain,
       system=system_message
     )
+    # print(f"\n\nllm.py Response: {response}\n\n")
     return process_model_output(response)
   except Exception as e:
     return f"Error calling Anthropic API: {str(e)}"
 
 def create_message_chain(prompt_path: str, variables: Dict[str, Any] = None) -> List[Dict[str, str]]:
-    # Load prompt template from file
     try:
         with open(prompt_path, 'r') as f:
             template_text = f.read()
     except FileNotFoundError:
         raise FileNotFoundError(f"Could not find prompt file at {prompt_path}")
     
-    # Apply template variables if provided
+    # Convert variables to YAML string format if they exist
     if variables:
         try:
-            template_text = template_text.format(**variables)
+            for key, value in variables.items():
+                if isinstance(value, dict):
+                    # Convert dict to YAML string with preserved formatting
+                    yaml_str = yaml.dump(value, sort_keys=False, default_flow_style=False)
+                    # Indent the YAML string
+                    indented_yaml = '\n'.join('    ' + line for line in yaml_str.splitlines())
+                    variables[key] = indented_yaml
+            template = Template(template_text)
+            template_text = template.substitute(variables)
         except KeyError as e:
             raise KeyError(f"Missing template variable in prompt: {e}")
     

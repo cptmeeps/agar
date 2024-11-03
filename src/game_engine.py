@@ -1,6 +1,6 @@
 from typing import Dict, Tuple, Any
 import yaml
-from game_types import GameState, Position, Tile
+from game_types import GameState, Position, Tile, Unit
 from input_action import get_input_action
 from move_action import move_action
 from combat_action import combat_action
@@ -24,37 +24,50 @@ def turn(game_state: GameState) -> GameState:
   )
 
 def create_game_state(config: Dict[str, Any]) -> GameState:
-  world = {}
-  size = config.get('board_size', 5)
-  
-  # Create a rectangular grid
-  for x in range(size):
-    for y in range(size):
-      pos = (x, y)
-      world[pos] = Tile(Position(x, y))
-  
-  return GameState(
-    world=world,
-    current_turn=1,
-    max_turns=config.get('max_turns', 100),
-    num_players=config.get('num_players', 2),
-    game_status="in_progress",
-    game_end_criteria=config.get('end_criteria', {'type': 'elimination'})
-  )
+    # Create a simple 5x5 world with some units
+    world = {}
+    size = config.get('board_size', 5)
+    
+    for x in range(size):
+        for y in range(size):
+            pos = (x, y)
+            units = []
+            # Add player 1's unit at (0, 2) - left side
+            if x == 0 and y == 2:
+                units = [Unit(player_id=1, health=1, movement_points=1)]
+            # Add player 2's unit at (4, 2) - right side
+            elif x == size-1 and y == 2:
+                units = [Unit(player_id=2, health=1, movement_points=1)]
+            
+            world[pos] = Tile(Position(x, y), units)
+    
+    return GameState(
+        world=world,
+        current_turn=1,
+        max_turns=config.get('max_turns', 10),
+        num_players=config.get('num_players', 2),
+        game_status="in_progress",
+        game_end_criteria=config.get('end_criteria', {'type': 'elimination'}),
+        player_one_config=config.get('player_one_config', {}),
+        player_two_config=config.get('player_two_config', {}),
+        turns={},
+        current_turn_input={}
+    )
 
-def run_game(config: Dict[str, Any]) -> GameState:
-  game_state = create_game_state(config) if config else create_sample_game_state()
-  print_game_state(game_state)
-  
-  while game_state.game_status != "game_over":
-    game_state = turn(game_state)
+def run_game(game_state: GameState) -> GameState:
     print_game_state(game_state)
-  
-  return game_state
+    
+    while game_state.game_status != "game_over":
+        game_state = turn(game_state)
+        print_game_state(game_state)
+    
+    return game_state
 
 def main():
-  game_state = run_game(None)  # Pass None to use sample game state
-  print("Game Over")
+    # Create initial game state using sample state
+    initial_state = create_sample_game_state()
+    game_state = run_game(initial_state)
+    print("Game Over")
 
 if __name__ == "__main__":
   main()

@@ -8,12 +8,18 @@ def create_sample_game_state() -> GameState:
         for y in range(5):
             pos = (x, y)
             units = []
-            # Add player 1's unit at (0, 2) - left side
+            # Add player 1's units at (0, 2) - left side
             if x == 0 and y == 2:
-                units = [Unit(player_id=1, health=1, movement_points=1)]
-            # Add player 2's unit at (4, 2) - right side
+                units = [
+                    Unit(player_id=1, health=1, movement_points=1),
+                    Unit(player_id=1, health=1, movement_points=1)
+                ]
+            # Add player 2's units at (4, 2) - right side
             elif x == 4 and y == 2:
-                units = [Unit(player_id=2, health=1, movement_points=1)]
+                units = [
+                    Unit(player_id=2, health=1, movement_points=1),
+                    Unit(player_id=2, health=1, movement_points=1)
+                ]
             
             world[pos] = Tile(Position(x, y), units)
     
@@ -43,6 +49,7 @@ def print_game_state(state: GameState):
     print(f"Game Status: {state.game_status}")
     print(f"Turn: {state.current_turn}/{state.max_turns}")
     print("\nWorld Map:")
+    print(state.current_turn_input)
     
     # Print header
     print("    ", end="")
