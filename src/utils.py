@@ -1,3 +1,4 @@
+import yaml
 from typing import Dict, Any
 from game_types import GameState, Position, Tile, Unit
 
@@ -32,8 +33,7 @@ def create_sample_game_state() -> GameState:
         game_end_criteria={'type': 'elimination'},
         player_one_config={},
         player_two_config={},
-        turns={},
-        current_turn_input={}
+        turns={}
     ) 
 
 def print_game_state(state: GameState):
@@ -49,13 +49,16 @@ def print_game_state(state: GameState):
     print(f"Game Status: {state.game_status}")
     print(f"Turn: {state.current_turn}/{state.max_turns}")
     
-    # print moves
-    
+    # Print moves from turns dictionary
     print("\nMoves this turn:")
     print("-" * 40)
     print("p_id\tsrc\tdest\tunits")
-    if state.current_turn_input and 'moves' in state.current_turn_input:
-        moves = state.current_turn_input['moves']
+    
+    # Get current turn's moves from turns dictionary
+    turn_data = state.turns.get(state.current_turn -1, {})
+    turn_input = turn_data.get('turn_input', {})
+    if 'moves' in turn_input:
+        moves = turn_input['moves']
         for source_pos, players in moves.items():
             for player_id, move_list in players.items():
                 for move in move_list:
@@ -63,8 +66,31 @@ def print_game_state(state: GameState):
     else:
         print("No moves")
     
-    # Print the world
+    # Print spawns from turns dictionary
+    print("\nSpawns this turn:")
+    print("-" * 40)
+    print("p_id\thex")
     
+    if 'spawns' in turn_data:
+        spawns = turn_data['spawns']
+        for spawn in spawns:
+            print(f"{spawn['player']}\t{spawn['hex']}")
+    else:
+        print("No spawns")
+    
+    # Print combat results from turns dictionary
+    print("\nCombats this turn:")
+    print("-" * 40)
+    print("pos\t\tp1_cas\tp2_cas")
+    
+    if 'combats' in turn_data:
+        combats = turn_data['combats']
+        for combat in combats:
+            print(f"{combat['position']}\t{combat['player_1_casualties']}\t{combat['player_2_casualties']}")
+    else:
+        print("No combats")
+    
+    # Print the world
     print("\nWorld:")
     print("-" * 40)  
     # Print header

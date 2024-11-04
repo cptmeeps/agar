@@ -1,17 +1,18 @@
 # Hexagonal Strategy Game
 
-A turn-based strategy game built using functional programming principles in Python.
+A turn-based strategy game built using functional programming principles in Python, featuring AI-driven players powered by Claude 3.5 Sonnet.
 
 ## Overview
 
-This project implements a hexagonal grid-based strategy game using pure functional programming paradigms. The game emphasizes immutable state management and side-effect-free functions to create a maintainable and testable codebase.
+This project implements a hexagonal grid-based strategy game using pure functional programming paradigms. The game emphasizes immutable state management and side-effect-free functions to create a maintainable and testable codebase. The game features AI players that make strategic decisions using natural language processing.
 
 ## Game Rules
 
 ### Map and Players
-- The game is played on a fixed-size hexagonal grid
+- The game is played on a fixed-size hexagonal grid (default: 5x5)
 - Exactly 2 players participate in each game
 - Each player controls identical units with the same capabilities
+- Players start with 2 units each on opposite sides of the map
 
 ### Units
 - Each player can control multiple units
@@ -26,8 +27,9 @@ This project implements a hexagonal grid-based strategy game using pure function
 The game proceeds in turns, with each turn divided into four distinct phases:
 
 1. **Input Collection Phase**
-   - Game collects and validates movement orders from both players
+   - Game collects movement orders from both AI players
    - Each order specifies source hex, destination hex, and number of units to move
+   - AI players receive a structured world representation to make decisions
 
 2. **Movement Phase**
    - Units are moved according to collected orders
@@ -55,7 +57,26 @@ The game can end in two ways:
 
 ## Technical Implementation
 
+### Architecture
 The game is implemented following functional programming principles:
-- Immutable state management
+- Immutable state management using dataclasses
 - Pure functions for game logic
 - No side effects in core game mechanics
+- Turn-based state transitions
+- Event logging and replay capability
+
+### Key Components
+- `GameState`: Immutable dataclass containing complete game state
+- `GameEngine`: Manages turn execution and phase transitions
+- `AI Players`: Claude-powered decision making for unit movement
+- `Action Handlers`: Pure functions for movement, combat, and spawning
+
+### State Management
+- Each turn's actions are recorded in a structured format
+- Game state transitions are handled through pure function transformations
+- Complete turn history is maintained for replay and analysis
+
+### AI Integration
+- AI players receive a structured world representation
+- Decision making is handled through natural language processing
+- Moves are validated and executed through the game engine

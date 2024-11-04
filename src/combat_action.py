@@ -46,4 +46,33 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
         units=surviving_units
     )
     
-    return GameState(**{**game_state.__dict__, 'world': world}) 
+    # Update turns dictionary with combat information
+    turns = dict(game_state.turns)
+    current_turn_data = turns.get(game_state.current_turn, {})
+    
+    # Initialize or get existing combats list
+    if 'combats' not in current_turn_data:
+        current_turn_data['combats'] = []
+    
+    # Add combat information, in the format:
+    # turns = {
+    #     1: {
+    #         'turn_input': {...},
+    #         'combats': [
+    #             {'position': (0, 2), 'player_1_casualties': 2, 'player_2_casualties': 1},
+    #             {'position': (3, 1), 'player_1_casualties': 0, 'player_2_casualties': 3}
+    #         ]
+    #     }
+    # }
+    
+    # Add combat information
+    current_turn_data['combats'].append({
+        'position': hex_pos,
+        'player_1_casualties': damage_dealt.get(1, 0),
+        'player_2_casualties': damage_dealt.get(2, 0)
+    })
+    
+    # Update turns dictionary
+    turns[game_state.current_turn] = current_turn_data
+    
+    return GameState(**{**game_state.__dict__, 'world': world, 'turns': turns}) 

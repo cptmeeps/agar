@@ -31,4 +31,3 @@ class GameState:
   player_one_config: Dict[str, Any]
   player_two_config: Dict[str, Any]
   turns: Dict[int, Dict[str, Any]]
-  current_turn_input: Dict[str, Any] 

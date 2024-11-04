@@ -34,4 +34,41 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
         units=list(tile.units) + [new_unit]
     )
     
-    return GameState(**{**game_state.__dict__, 'world': world}) 
+    # Update turns dictionary with spawn information
+    turns = dict(game_state.turns)
+    current_turn_data = turns.get(game_state.current_turn, {})
+    
+    # Initialize or get existing spawns list
+    if 'spawns' not in current_turn_data:
+        current_turn_data['spawns'] = []
+    
+    # Add spawn information, in the format:
+    # turns = {
+    #     1: {
+    #         'turn_input': {...},
+    #         'spawns': [
+    #             {'hex': (0, 2), 'player': 1},
+    #             {'hex': (3, 1), 'player': 2}
+    #         ]
+    #     }
+    # }
+
+    current_turn_data['spawns'].append({
+        'hex': hex_pos,
+        'player': player_id
+    })
+    
+    # Update turns dictionary
+    turns[game_state.current_turn] = current_turn_data
+    
+    return GameState(
+        world=world,
+        current_turn=game_state.current_turn,
+        max_turns=game_state.max_turns,
+        num_players=game_state.num_players,
+        game_status=game_state.game_status,
+        game_end_criteria=game_state.game_end_criteria,
+        player_one_config=game_state.player_one_config,
+        player_two_config=game_state.player_two_config,
+        turns=turns
+    ) 

@@ -50,8 +50,7 @@ def create_game_state(config: Dict[str, Any]) -> GameState:
         game_end_criteria=config.get('end_criteria', {'type': 'elimination'}),
         player_one_config=config.get('player_one_config', {}),
         player_two_config=config.get('player_two_config', {}),
-        turns={},
-        current_turn_input={}
+        turns={}
     )
 
 def run_game(game_state: GameState) -> GameState:

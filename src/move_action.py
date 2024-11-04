@@ -2,14 +2,37 @@ from typing import Dict, Tuple, Any
 from game_types import GameState, Tile
 
 def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
+    # Get current turn's moves from turns dictionary
+    current_turn = game_state.current_turn
+    turn_data = game_state.turns.get(current_turn, {})
+    turn_input = turn_data.get('turn_input', {})
+
+    # Add move information, in the format:
+    # turns = {
+    #     1: {
+    #         'turn_input': {
+    #             'moves': {
+    #                 (0, 2): {  # source position
+    #                     1: [  # player_id
+    #                         {'destination': (1, 2), 'units': 2},
+    #                         {'destination': (0, 3), 'units': 1}
+    #                     ],
+    #                     2: [
+    #                         {'destination': (0, 1), 'units': 1}
+    #                     ]
+    #                 }
+    #             }
+    #         }
+    #     }
+    # }
+
     # If no moves exist or this hex isn't a source of any moves, return unchanged
-    if ('moves' not in game_state.current_turn_input or 
-        hex_pos not in game_state.current_turn_input['moves']):
+    if ('moves' not in turn_input or 
+        hex_pos not in turn_input['moves']):
         return game_state
     
     world = dict(game_state.world)
-    # {'moves': {(0, 2): {1: [{'destination': (1, 2), 'units': 1}, {'destination': (0, 1), 'units': 1}], 2: []}, (4, 2): {1: [], 2: [{'destination': (3, 2), 'units': 1}]}}}
-    moves = game_state.current_turn_input['moves'][hex_pos]
+    moves = turn_input['moves'][hex_pos]
     source_tile = world[hex_pos]
     
     # Process moves for each player

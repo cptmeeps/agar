@@ -97,6 +97,8 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
     player_two_moves = get_ai_moves(game_state, 2)
     
     # Restructure moves by source cell, keeping players separate
+
+    
     all_moves = {}
     for source, player_moves in [
         (1, player_one_moves['moves']), 
@@ -111,9 +113,42 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
                 'units': move['units']
             })
     
-    # Update game state with restructured moves
+    # Format the moves in the following structure:
+    # turns = {
+    #     1: {
+    #         'turn_input': {
+    #             'moves': {
+    #                 (0, 2): {  # source position
+    #                     1: [  # player_id
+    #                         {'destination': (1, 2), 'units': 2},
+    #                         {'destination': (0, 3), 'units': 1}
+    #                     ],
+    #                     2: [
+    #                         {'destination': (0, 1), 'units': 1}
+    #                     ]
+    #                 }
+    #             }
+    #         }
+    #     }
+    # }
+
+    # Create or update turn data in turns dictionary
+    turns = dict(game_state.turns)
+    turns[game_state.current_turn] = {
+        'turn_input': {'moves': all_moves}
+    }
+    
+    # Create new game state with updated turns
     return GameState(
-        **{**game_state.__dict__, 'current_turn_input': {'moves': all_moves}}
+        world=game_state.world,
+        current_turn=game_state.current_turn,
+        max_turns=game_state.max_turns,
+        num_players=game_state.num_players,
+        game_status=game_state.game_status,
+        game_end_criteria=game_state.game_end_criteria,
+        player_one_config=game_state.player_one_config,
+        player_two_config=game_state.player_two_config,
+        turns=turns
     )
 
 def main():
