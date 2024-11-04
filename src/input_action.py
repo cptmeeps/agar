@@ -83,16 +83,13 @@ def get_ai_moves(game_state: GameState, player_id: int) -> Dict[str, Any]:
     
     # Get LLM response
     response = call_llm_api(message_chain)
-    # print(f"Response: {response}")
     try:
         response = json.loads(response)
-        # print(f"Response: {response}")
         return response
-        # return response.get('moves', {})
     except (json.JSONDecodeError, AttributeError) as e:
         print(f"Error parsing moves: {e}")
     
-    return {"moves": []}
+    return {}
 
 def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameState:
     # Get moves from both AIs
@@ -106,7 +103,7 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
         (2, player_two_moves['moves'])
     ]:
         for move in player_moves:
-            source_pos = tuple(move['source'])  # Convert [q, r] to (q, r)
+            source_pos = tuple(move['source'])  
             if source_pos not in all_moves:
                 all_moves[source_pos] = {1: [], 2: []}
             all_moves[source_pos][source].append({

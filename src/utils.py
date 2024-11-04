@@ -48,9 +48,25 @@ def print_game_state(state: GameState):
     # Print game status
     print(f"Game Status: {state.game_status}")
     print(f"Turn: {state.current_turn}/{state.max_turns}")
-    print("\nWorld Map:")
-    print(state.current_turn_input)
     
+    # print moves
+    
+    print("\nMoves this turn:")
+    print("-" * 40)
+    print("p_id\tsrc\tdest\tunits")
+    if state.current_turn_input and 'moves' in state.current_turn_input:
+        moves = state.current_turn_input['moves']
+        for source_pos, players in moves.items():
+            for player_id, move_list in players.items():
+                for move in move_list:
+                    print(f"{player_id}\t{source_pos}\t{move['destination']}\t{move['units']}")
+    else:
+        print("No moves")
+    
+    # Print the world
+    
+    print("\nWorld:")
+    print("-" * 40)  
     # Print header
     print("    ", end="")
     for x in range(min_x, max_x + 1):

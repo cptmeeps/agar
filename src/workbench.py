@@ -7,9 +7,9 @@ import json
 def test_run_game():
   print("Starting game test...")
   # Create and display initial game state
-  print("\nInitial Game State:")
+  # print("\nInitial Game State:")
   game_state = create_sample_game_state()
-  print_game_state(game_state)
+  # print_game_state(game_state)
   
   # Run the game and get final state
   print("\nRunning game simulation...")
@@ -66,12 +66,10 @@ def test_input_action():
     return updated_state
 
 if __name__ == "__main__":
-  # test_run_game()
-  # print("\n" + "="*50 + "\n")
-  # test_world_representation()
-  # print("\n" + "="*50 + "\n")
-  # test_ai_moves()
-  # print("\n" + "="*50 + "\n")
-  test_input_action()
-
-
+  test_run_game()
+  # # print("\n" + "="*50 + "\n")
+  # # test_world_representation()
+  # # print("\n" + "="*50 + "\n")
+  # # test_ai_moves()
+  # # print("\n" + "="*50 + "\n")
+  # test_input_action()
