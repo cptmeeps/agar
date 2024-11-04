@@ -9,19 +9,30 @@ from turn_end_action import turn_end_action
 from utils import create_sample_game_state, print_game_state
 
 def turn(game_state: GameState) -> GameState:
-  new_state = game_state
-  
-  new_state = get_input_action(new_state, (0, 0))
-  
-  for hex_pos in game_state.world.keys():
-    new_state = move_action(new_state, hex_pos)
-    new_state = combat_action(new_state, hex_pos)
-    new_state = spawn_action(new_state, hex_pos)
-    new_state = turn_end_action(new_state, hex_pos)
-  
-  return GameState(
-    **{**new_state.__dict__, 'current_turn': new_state.current_turn + 1}
-  )
+    new_state = game_state
+    
+    # Get input actions first
+    new_state = get_input_action(new_state, (0, 0))
+    
+    # Process all moves first
+    for hex_pos in game_state.world.keys():
+        new_state = move_action(new_state, hex_pos)
+    
+    # Then process all combat
+    for hex_pos in game_state.world.keys():
+        new_state = combat_action(new_state, hex_pos)
+    
+    # Then process all spawns
+    for hex_pos in game_state.world.keys():
+        new_state = spawn_action(new_state, hex_pos)
+    
+    # Finally process all turn end actions
+    for hex_pos in game_state.world.keys():
+        new_state = turn_end_action(new_state, hex_pos)
+    
+    return GameState(
+        **{**new_state.__dict__, 'current_turn': new_state.current_turn + 1}
+    )
 
 def create_game_state(config: Dict[str, Any]) -> GameState:
     # Create a simple 5x5 world with some units

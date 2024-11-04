@@ -96,42 +96,65 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
     player_one_moves = get_ai_moves(game_state, 1)
     player_two_moves = get_ai_moves(game_state, 2)
     
-    # Restructure moves by source cell, keeping players separate
-
-    
+    # Initialize all_moves dictionary
     all_moves = {}
+    
+    # Track remaining units at each source position for each player
+    remaining_units = {}
+    
+    # First pass: Initialize remaining units count
     for source, player_moves in [
-        (1, player_one_moves['moves']), 
-        (2, player_two_moves['moves'])
+        (1, player_one_moves.get('moves', [])), 
+        (2, player_two_moves.get('moves', []))
     ]:
         for move in player_moves:
-            source_pos = tuple(move['source'])  
+            source_pos = tuple(move['source'])
+            if source_pos not in game_state.world:
+                continue
+                
+            if source_pos not in remaining_units:
+                remaining_units[source_pos] = {}
+                source_tile = game_state.world[source_pos]
+                for player_id in [1, 2]:
+                    remaining_units[source_pos][player_id] = sum(
+                        1 for unit in source_tile.units if unit.player_id == player_id
+                    )
+    
+    # Process and validate moves for each player
+    for source, player_moves in [
+        (1, player_one_moves.get('moves', [])), 
+        (2, player_two_moves.get('moves', []))
+    ]:
+        for move in player_moves:
+            source_pos = tuple(move['source'])
+            
+            # Skip if source position doesn't exist in world
+            if source_pos not in game_state.world:
+                continue
+                
+            # Initialize source position in all_moves if needed
             if source_pos not in all_moves:
                 all_moves[source_pos] = {1: [], 2: []}
+            
+            # Calculate available units for this move
+            available_units = remaining_units[source_pos][source]
+            
+            # Skip if no units available
+            if available_units <= 0:
+                continue
+                
+            # Adjust units to move based on availability
+            units_to_move = min(move['units'], available_units)
+            
+            # Update remaining units
+            remaining_units[source_pos][source] -= units_to_move
+            
+            # Add valid move to all_moves
             all_moves[source_pos][source].append({
                 'destination': tuple(move['destination']),
-                'units': move['units']
+                'units': units_to_move
             })
     
-    # Format the moves in the following structure:
-    # turns = {
-    #     1: {
-    #         'turn_input': {
-    #             'moves': {
-    #                 (0, 2): {  # source position
-    #                     1: [  # player_id
-    #                         {'destination': (1, 2), 'units': 2},
-    #                         {'destination': (0, 3), 'units': 1}
-    #                     ],
-    #                     2: [
-    #                         {'destination': (0, 1), 'units': 1}
-    #                     ]
-    #                 }
-    #             }
-    #         }
-    #     }
-    # }
-
     # Create or update turn data in turns dictionary
     turns = dict(game_state.turns)
     turns[game_state.current_turn] = {

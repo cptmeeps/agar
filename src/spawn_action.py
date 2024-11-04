@@ -1,5 +1,6 @@
 from typing import Dict, Tuple, Any
 from game_types import GameState, Tile, Unit
+import json
 
 def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     tile = game_state.world[hex_pos]
@@ -15,12 +16,17 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
             players_units[unit.player_id] = []
         players_units[unit.player_id].append(unit)
     
-    # Only spawn if one player controls the hex
+    # Only spawn if one player controls the hex and has at least one unit
     if len(players_units) != 1:
         return game_state
-    
-    # Get the controlling player and create new unit
+        
+    # print("players_units at", hex_pos, ":", players_units)
     player_id = list(players_units.keys())[0]
+    if len(players_units[player_id]) < 1:
+        return game_state
+    # print(f"Turn {game_state.current_turn}: Spawning unit for player {player_id} at {hex_pos}")
+
+    # Create new unit
     new_unit = Unit(
         player_id=player_id,
         health=1,
@@ -38,27 +44,14 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     turns = dict(game_state.turns)
     current_turn_data = turns.get(game_state.current_turn, {})
     
-    # Initialize or get existing spawns list
     if 'spawns' not in current_turn_data:
         current_turn_data['spawns'] = []
     
-    # Add spawn information, in the format:
-    # turns = {
-    #     1: {
-    #         'turn_input': {...},
-    #         'spawns': [
-    #             {'hex': (0, 2), 'player': 1},
-    #             {'hex': (3, 1), 'player': 2}
-    #         ]
-    #     }
-    # }
-
     current_turn_data['spawns'].append({
         'hex': hex_pos,
         'player': player_id
     })
     
-    # Update turns dictionary
     turns[game_state.current_turn] = current_turn_data
     
     return GameState(

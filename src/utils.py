@@ -26,7 +26,7 @@ def create_sample_game_state() -> GameState:
     
     return GameState(
         world=world,
-        current_turn=1,
+        current_turn=0,
         max_turns=10,
         num_players=2,
         game_status="in_progress",

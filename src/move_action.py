@@ -7,25 +7,6 @@ def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     turn_data = game_state.turns.get(current_turn, {})
     turn_input = turn_data.get('turn_input', {})
 
-    # Add move information, in the format:
-    # turns = {
-    #     1: {
-    #         'turn_input': {
-    #             'moves': {
-    #                 (0, 2): {  # source position
-    #                     1: [  # player_id
-    #                         {'destination': (1, 2), 'units': 2},
-    #                         {'destination': (0, 3), 'units': 1}
-    #                     ],
-    #                     2: [
-    #                         {'destination': (0, 1), 'units': 1}
-    #                     ]
-    #                 }
-    #             }
-    #         }
-    #     }
-    # }
-
     # If no moves exist or this hex isn't a source of any moves, return unchanged
     if ('moves' not in turn_input or 
         hex_pos not in turn_input['moves']):
@@ -33,12 +14,15 @@ def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     
     world = dict(game_state.world)
     moves = turn_input['moves'][hex_pos]
-    source_tile = world[hex_pos]
+    # print("moves at", hex_pos, ":",moves)
     
     # Process moves for each player
     for player_id, player_moves in moves.items():
         # Process each move from this player
         for move in player_moves:
+            # Get current state of source tile
+            source_tile = world[hex_pos]
+            
             dest_pos = move['destination']
             units_to_move = move['units']
             
@@ -51,8 +35,10 @@ def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
                 continue
             
             # Move units from source to destination
+            # print(f"Turn {current_turn}: Moving {units_to_move} units from player {player_id} from {hex_pos} to {dest_pos}")
             moving_units = source_tile.units[:units_to_move]
             remaining_units = source_tile.units[units_to_move:]
+            # print("remaining_units at", hex_pos, ":", remaining_units)
             
             # Update source tile
             world[hex_pos] = Tile(
