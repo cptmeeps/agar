@@ -21,6 +21,24 @@ class Tile:
     units: List[Unit] = field(default_factory=list)
 
 @dataclass(frozen=True)
+class PlayerState:
+    player_config: Dict[str, Any] = field(default_factory=dict)
+    turn_msg_chain: List[Dict[str, str]] = field(default_factory=list)
+    turn_model_output: Dict[str, Any] = field(default_factory=lambda: {'combats': []})
+    turn_input: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass(frozen=True)
+class TurnState:
+    turn_number: int = 1
+    world: Dict[Tuple[int, int], Tile] = field(default_factory=dict)
+    player_one: PlayerState = field(default_factory=PlayerState)
+    player_two: PlayerState = field(default_factory=PlayerState)
+    input_moves: Dict[Tuple[int, int], Dict[int, List[Dict[str, Any]]]] = field(default_factory=dict)  # Structure: {(x,y): {player_id: [{'destination': (x,y), 'units': n}, ...]}}}
+    move_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'source': (x,y), 'destination': (x,y), 'units': n, 'player_id': id}, ...]
+    spawn_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'position': (x,y), 'player_id': id}, ...]
+    combat_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'position': (x,y), 'player_1_casualties': n, 'player_2_casualties': n}, ...]
+
+@dataclass(frozen=True)
 class GameState:
     world: Dict[Tuple[int, int], Tile]
     current_turn: int
@@ -30,7 +48,7 @@ class GameState:
     game_end_criteria: Dict[str, Any]
     player_one_config: Dict[str, Any]
     player_two_config: Dict[str, Any]
-    turns: Dict[int, Dict[str, Any]]
+    turns: Dict[int, TurnState]
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> 'GameState':
@@ -57,16 +75,25 @@ class GameState:
                 
                 world[pos] = Tile(Position(x, y), units)
         
+        # Create all TurnStates from 1 to max_turns
+        max_turns = config.get('max_turns', 10)
+        turns = {}
+        for turn_num in range(1, max_turns + 1):
+            turns[turn_num] = TurnState(
+                turn_number=turn_num,
+                world=world
+            )
+
         return cls(
             world=world,
             current_turn=1,
-            max_turns=config.get('max_turns', 10),
+            max_turns=max_turns,
             num_players=config.get('num_players', 2),
             game_status="in_progress",
             game_end_criteria=config.get('end_criteria', {'type': 'elimination'}),
             player_one_config=config.get('player_one_config', {}),
             player_two_config=config.get('player_two_config', {}),
-            turns={}
+            turns=turns
         )
 
     @classmethod

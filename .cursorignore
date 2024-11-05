@@ -6,3 +6,7 @@ logs/
 todo.txt
 requirements.txt
 README.md
+pytest.ini
+.cursorignore
+.gitignore
+.conftest.py

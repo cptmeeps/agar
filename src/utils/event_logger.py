@@ -30,7 +30,7 @@ class GameEventLogger:
         }
         
         with open(self.log_file, 'a') as f:
-            f.write(json.dumps(log_entry) + '\n')
+            f.write(json.dumps(log_entry, indent=2) + '\n\n')
             
     def _get_world_state_summary(self, game_state: 'GameState') -> Dict[str, Any]:
         unit_counts = {1: 0, 2: 0}
@@ -109,4 +109,37 @@ class GameEventLogger:
                 "units_moved": units,
                 "player_id": player_id
             }
-        ) 
+        )
+
+    def _convert_tuples_to_strings(self, data):
+        if isinstance(data, dict):
+            return {
+                (f"{k[0]},{k[1]}" if isinstance(k, tuple) else k): self._convert_tuples_to_strings(v)
+                for k, v in data.items()
+            }
+        elif isinstance(data, list):
+            return [self._convert_tuples_to_strings(item) for item in data]
+        elif isinstance(data, tuple) and len(data) == 2:
+            return f"{data[0]},{data[1]}"
+        return data
+
+    def log_turn_state(self, game_state: 'GameState', turn_state: 'TurnState') -> None:
+        # Get the current turn's state details
+        turn_details = {
+            "turn_number": turn_state.turn_number,
+            "player_one": {
+                "turn_input": self._convert_tuples_to_strings(turn_state.player_one.turn_input),
+                "turn_model_output": self._convert_tuples_to_strings(turn_state.player_one.turn_model_output)
+            },
+            "player_two": {
+                "turn_input": self._convert_tuples_to_strings(turn_state.player_two.turn_input),
+                "turn_model_output": self._convert_tuples_to_strings(turn_state.player_two.turn_model_output)
+            },
+            "input_moves": self._convert_tuples_to_strings(turn_state.input_moves)
+        }
+        
+        self.log_action(
+            "turn_state",
+            game_state,
+            details=turn_details
+        )

@@ -1,6 +1,6 @@
 import pytest
 from actions.spawn_action import spawn_action
-from game_state import GameState, Unit, Tile, Position
+from game_state import GameState, Unit, Tile, Position, PlayerState, TurnState
 
 def test_spawn_action_basic(initial_game_state):
     # Create a tile with one unit
@@ -9,7 +9,16 @@ def test_spawn_action_basic(initial_game_state):
     unit = Unit(player_id=1, health=1, movement_points=1)
     world[test_pos] = Tile(position=test_pos, units=[unit])
     
-    state = GameState(**{**initial_game_state.__dict__, 'world': world})
+    turns = {
+        1: TurnState(
+            turn_number=1,
+            world=world,
+            player_one=PlayerState(),
+            player_two=PlayerState()
+        )
+    }
+    
+    state = GameState.from_state(initial_game_state, world=world, turns=turns)
     new_state = spawn_action(state, test_pos)
     
     # Check that a new unit was spawned
@@ -22,7 +31,16 @@ def test_spawn_action_empty_tile(initial_game_state):
     world = dict(initial_game_state.world)
     world[test_pos] = Tile(position=test_pos, units=[])
     
-    state = GameState(**{**initial_game_state.__dict__, 'world': world})
+    turns = {
+        1: TurnState(
+            turn_number=1,
+            world=world,
+            player_one=PlayerState(),
+            player_two=PlayerState()
+        )
+    }
+    
+    state = GameState.from_state(initial_game_state, world=world, turns=turns)
     new_state = spawn_action(state, test_pos)
     
     # Check that no spawn occurred
@@ -38,7 +56,16 @@ def test_spawn_action_multiple_players(initial_game_state):
     ]
     world[test_pos] = Tile(position=test_pos, units=units)
     
-    state = GameState(**{**initial_game_state.__dict__, 'world': world})
+    turns = {
+        1: TurnState(
+            turn_number=1,
+            world=world,
+            player_one=PlayerState(),
+            player_two=PlayerState()
+        )
+    }
+    
+    state = GameState.from_state(initial_game_state, world=world, turns=turns)
     new_state = spawn_action(state, test_pos)
     
     # Check that no spawn occurred due to multiple players
@@ -51,15 +78,25 @@ def test_spawn_action_turn_recording(initial_game_state):
     unit = Unit(player_id=1, health=1, movement_points=1)
     world[test_pos] = Tile(position=test_pos, units=[unit])
     
-    state = GameState(**{**initial_game_state.__dict__, 'world': world})
+    turns = {
+        1: TurnState(
+            turn_number=1,
+            world=world,
+            player_one=PlayerState(),
+            player_two=PlayerState()
+        )
+    }
+    
+    state = GameState.from_state(initial_game_state, world=world, turns=turns)
     new_state = spawn_action(state, test_pos)
     
     # Check turns dictionary was updated
     current_turn = new_state.current_turn
-    assert 'spawns' in new_state.turns[current_turn]
-    assert len(new_state.turns[current_turn]['spawns']) == 1
-    assert new_state.turns[current_turn]['spawns'][0]['hex'] == test_pos
-    assert new_state.turns[current_turn]['spawns'][0]['player'] == 1
+    turn_state = new_state.turns[current_turn]
+    assert 'spawns' in turn_state.player_one.turn_model_output
+    spawn_record = turn_state.player_one.turn_model_output['spawns'][0]
+    assert spawn_record['position'] == test_pos
+    assert spawn_record['player_id'] == 1
 
 def test_spawn_action_multiple_existing_units(initial_game_state):
     # Test spawning with multiple existing units of same player
@@ -71,7 +108,16 @@ def test_spawn_action_multiple_existing_units(initial_game_state):
     ]
     world[test_pos] = Tile(position=test_pos, units=units)
     
-    state = GameState(**{**initial_game_state.__dict__, 'world': world})
+    turns = {
+        1: TurnState(
+            turn_number=1,
+            world=world,
+            player_one=PlayerState(),
+            player_two=PlayerState()
+        )
+    }
+    
+    state = GameState.from_state(initial_game_state, world=world, turns=turns)
     new_state = spawn_action(state, test_pos)
     
     # Check that spawn occurred
@@ -85,7 +131,16 @@ def test_spawn_action_new_unit_properties(initial_game_state):
     unit = Unit(player_id=1, health=1, movement_points=1)
     world[test_pos] = Tile(position=test_pos, units=[unit])
     
-    state = GameState(**{**initial_game_state.__dict__, 'world': world})
+    turns = {
+        1: TurnState(
+            turn_number=1,
+            world=world,
+            player_one=PlayerState(),
+            player_two=PlayerState()
+        )
+    }
+    
+    state = GameState.from_state(initial_game_state, world=world, turns=turns)
     new_state = spawn_action(state, test_pos)
     
     # Check new unit properties

@@ -1,6 +1,6 @@
 from typing import Dict, Tuple, Any
 import random
-from game_state import GameState, Tile
+from game_state import GameState, Tile, PlayerState, TurnState
 from utils.logger import logger
 
 def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
@@ -43,23 +43,44 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
         units=surviving_units
     )
     
-    # Update turns dictionary with combat information
-    turns = dict(game_state.turns)
-    current_turn_data = turns.get(game_state.current_turn, {})
+    # Get current turn state and create updated version
+    current_turn = game_state.current_turn
+    current_turn_state = game_state.turns[current_turn]
     
-    # Initialize or get existing combats list
-    if 'combats' not in current_turn_data:
-        current_turn_data['combats'] = []
-    
-    # Add combat information
-    current_turn_data['combats'].append({
+    # Create combat record
+    combat_record = {
         'position': hex_pos,
         'player_1_casualties': damage_dealt.get(1, 0),
         'player_2_casualties': damage_dealt.get(2, 0)
-    })
+    }
+    
+    # Create new turn state with updated world and combat information
+    new_turn_state = TurnState(
+        turn_number=current_turn_state.turn_number,
+        world=world,
+        player_one=PlayerState(
+            player_config=current_turn_state.player_one.player_config,
+            turn_msg_chain=current_turn_state.player_one.turn_msg_chain,
+            turn_model_output={
+                **current_turn_state.player_one.turn_model_output,
+                'combats': [*current_turn_state.player_one.turn_model_output.get('combats', []), combat_record]
+            },
+            turn_input=current_turn_state.player_one.turn_input
+        ),
+        player_two=PlayerState(
+            player_config=current_turn_state.player_two.player_config,
+            turn_msg_chain=current_turn_state.player_two.turn_msg_chain,
+            turn_model_output={
+                **current_turn_state.player_two.turn_model_output,
+                'combats': [*current_turn_state.player_two.turn_model_output.get('combats', []), combat_record]
+            },
+            turn_input=current_turn_state.player_two.turn_input
+        )
+    )
     
     # Update turns dictionary
-    turns[game_state.current_turn] = current_turn_data
+    turns = dict(game_state.turns)
+    turns[current_turn] = new_turn_state
     
     # Log combat results
     logger.log_combat(

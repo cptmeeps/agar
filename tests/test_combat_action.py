@@ -48,8 +48,9 @@ def test_combat_action_basic_combat(initial_game_state, mock_random_roll):
     assert len(new_state.world[(0, 2)].units) == 0
     
     # Check combat was recorded in turns
-    assert 'combats' in new_state.turns[state.current_turn]
-    combat_record = new_state.turns[state.current_turn]['combats'][0]
+    turn_state = new_state.turns[state.current_turn]
+    assert 'combats' in turn_state.player_one.turn_model_output
+    combat_record = turn_state.player_one.turn_model_output['combats'][0]
     assert combat_record['position'] == (0, 2)
     assert combat_record['player_1_casualties'] == 1
     assert combat_record['player_2_casualties'] == 1

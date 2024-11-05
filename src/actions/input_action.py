@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Any
-from game_state import GameState
+from game_state import GameState, Tile, PlayerState, TurnState
 from utils.llm import create_message_chain, call_llm_api
 import json
 from utils.logger import logger
@@ -142,38 +142,50 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
         for move in player_moves:
             source_pos = tuple(move['source'])
             
-            # Skip if source position doesn't exist in world
             if source_pos not in game_state.world:
                 continue
                 
-            # Initialize source position in all_moves if needed
             if source_pos not in all_moves:
                 all_moves[source_pos] = {1: [], 2: []}
             
-            # Calculate available units for this move
             available_units = remaining_units[source_pos][source]
             
-            # Skip if no units available
             if available_units <= 0:
                 continue
                 
-            # Adjust units to move based on availability
             units_to_move = min(move['units'], available_units)
-            
-            # Update remaining units
             remaining_units[source_pos][source] -= units_to_move
             
-            # Add valid move to all_moves
             all_moves[source_pos][source].append({
                 'destination': tuple(move['destination']),
                 'units': units_to_move
             })
+
+    # Get current turn state
+    current_turn = game_state.current_turn
+    current_turn_state = game_state.turns[current_turn]
     
-    # Create or update turn data in turns dictionary
+    # Create new turn state with player states including the moves
+    new_turn_state = TurnState(
+        turn_number=current_turn_state.turn_number,
+        world=game_state.world,
+        player_one=PlayerState(
+            player_config=current_turn_state.player_one.player_config,
+            turn_msg_chain=current_turn_state.player_one.turn_msg_chain,
+            turn_model_output=current_turn_state.player_one.turn_model_output,
+            turn_input={}
+        ),
+        player_two=PlayerState(
+            player_config=current_turn_state.player_two.player_config,
+            turn_msg_chain=current_turn_state.player_two.turn_msg_chain,
+            turn_model_output=current_turn_state.player_two.turn_model_output,
+            turn_input={}
+        ),
+        input_moves=all_moves
+    )
+
+    # Update turns dictionary
     turns = dict(game_state.turns)
-    turns[game_state.current_turn] = {
-        'turn_input': {'moves': all_moves}
-    }
+    turns[current_turn] = new_turn_state
     
-    # Create new game state with updated turns
     return GameState.from_state(game_state, turns=turns)

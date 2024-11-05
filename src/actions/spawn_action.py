@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Any
-from game_state import GameState, Tile, Unit
+from game_state import GameState, Tile, Unit, PlayerState, TurnState
 from utils.logger import logger
 
 def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
@@ -48,18 +48,46 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
         details={"player_id": player_id}
     )
     
-    # Update turns dictionary with spawn information
+    # Get current turn state and create updated version
+    current_turn = game_state.current_turn
+    current_turn_state = game_state.turns[current_turn]
+    
+    # Create spawn record
+    spawn_record = {
+        'position': hex_pos,
+        'player_id': player_id
+    }
+    
+    # Create new turn state with updated world and spawn information
+    new_turn_state = TurnState(
+        turn_number=current_turn_state.turn_number,
+        world=world,
+        player_one=PlayerState(
+            player_config=current_turn_state.player_one.player_config,
+            turn_msg_chain=current_turn_state.player_one.turn_msg_chain,
+            turn_model_output={
+                **current_turn_state.player_one.turn_model_output,
+                'spawns': [*current_turn_state.player_one.turn_model_output.get('spawns', []), spawn_record]
+            },
+            turn_input=current_turn_state.player_one.turn_input
+        ),
+        player_two=PlayerState(
+            player_config=current_turn_state.player_two.player_config,
+            turn_msg_chain=current_turn_state.player_two.turn_msg_chain,
+            turn_model_output={
+                **current_turn_state.player_two.turn_model_output,
+                'spawns': [*current_turn_state.player_two.turn_model_output.get('spawns', []), spawn_record]
+            },
+            turn_input=current_turn_state.player_two.turn_input
+        ),
+        input_moves=current_turn_state.input_moves,
+        move_actions=current_turn_state.move_actions,
+        spawn_actions=[*current_turn_state.spawn_actions, spawn_record],
+        combat_actions=current_turn_state.combat_actions
+    )
+    
+    # Update turns dictionary
     turns = dict(game_state.turns)
-    current_turn_data = turns.get(game_state.current_turn, {})
-    
-    if 'spawns' not in current_turn_data:
-        current_turn_data['spawns'] = []
-    
-    current_turn_data['spawns'].append({
-        'hex': hex_pos,
-        'player': player_id
-    })
-    
-    turns[game_state.current_turn] = current_turn_data
+    turns[current_turn] = new_turn_state
     
     return GameState.from_state(game_state, world=world, turns=turns) 

@@ -4,7 +4,7 @@ from actions.input_action import (
     get_ai_moves,
     get_input_action
 )
-from game_state import GameState, Unit, Tile, Position
+from game_state import GameState, Unit, Tile, Position, TurnState, PlayerState
 from unittest.mock import patch, MagicMock
 
 @pytest.fixture
@@ -36,7 +36,21 @@ def sample_game_state(initial_game_state):
         ]
     )
     
-    return GameState(**{**initial_game_state.__dict__, 'world': world})
+    # Create proper turn state
+    turns = {
+        1: TurnState(
+            turn_number=1,
+            world=world,
+            player_one=PlayerState(),
+            player_two=PlayerState()
+        )
+    }
+    
+    return GameState(**{
+        **initial_game_state.__dict__, 
+        'world': world,
+        'turns': turns
+    })
 
 def test_create_llm_world_representation_basic(sample_game_state):
     world_rep = create_llm_world_representation(sample_game_state, player_id=1)

@@ -6,7 +6,7 @@ def turn_end_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameStat
     if hex_pos != next(iter(game_state.world)):
         return game_state
     
-    if game_state.current_turn >= game_state.max_turns:
+    if game_state.current_turn > game_state.max_turns:
         logger.log_action(
             "game_over",
             game_state,

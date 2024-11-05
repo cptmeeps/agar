@@ -1,18 +1,21 @@
 from typing import Dict, Tuple, Any
-from game_state import GameState, Tile
+from game_state import GameState, Tile, TurnState
 from utils.logger import logger
 
 def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
-    # Get current turn's moves from turns dictionary
+    # Get current turn's state
     current_turn = game_state.current_turn
-    turn_data = game_state.turns.get(current_turn, {})
-    turn_input = turn_data.get('turn_input', {})
-
-    if ('moves' not in turn_input or hex_pos not in turn_input['moves']):
+    turn_state = game_state.turns[current_turn]
+    
+    # Check if moves exist in input_moves for this hex
+    if hex_pos not in turn_state.input_moves:
         return game_state
     
     world = dict(game_state.world)
-    moves = turn_input['moves'][hex_pos]
+    moves = {
+        1: turn_state.input_moves.get(hex_pos, {}).get(1, []),
+        2: turn_state.input_moves.get(hex_pos, {}).get(2, [])
+    }
     
     for player_id, player_moves in moves.items():
         for move in player_moves:
@@ -40,4 +43,27 @@ def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
                 player_id
             )
     
-    return GameState(**{**game_state.__dict__, 'world': world}) 
+    # Create new turn state with updated world
+    move_record = {
+        'source': hex_pos,
+        'destination': dest_pos,
+        'units': units_to_move,
+        'player_id': player_id
+    }
+    
+    new_turn_state = TurnState(
+        turn_number=turn_state.turn_number,
+        world=world,
+        player_one=turn_state.player_one,
+        player_two=turn_state.player_two,
+        input_moves=turn_state.input_moves,
+        move_actions=[*turn_state.move_actions, move_record],  # Add new move to existing moves
+        spawn_actions=turn_state.spawn_actions,
+        combat_actions=turn_state.combat_actions
+    )
+    
+    # Update turns dictionary
+    turns = dict(game_state.turns)
+    turns[current_turn] = new_turn_state
+    
+    return GameState.from_state(game_state, world=world, turns=turns) 

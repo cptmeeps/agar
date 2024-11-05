@@ -11,8 +11,8 @@ from utils.event_logger import GameEventLogger
 def turn(game_state: GameState) -> GameState:
     logger = GameEventLogger()
     new_state = game_state
-    print(f"Turn {new_state.current_turn}")
-    print(f"Game status: {new_state.game_status}")
+    # print(f"Turn {new_state.current_turn}")
+    # print(f"Game status: {new_state.game_status}")
     
     # Log turn start
     logger.log_action("turn_start", new_state)
@@ -71,8 +71,12 @@ def turn(game_state: GameState) -> GameState:
     # Log turn end
     logger.log_action("turn_end", new_state)
     
+    # Log the final turn state
+    logger.log_turn_state(new_state, new_state.turns[new_state.current_turn])
+    
     # Update turn counter using from_state
     return GameState.from_state(new_state, current_turn=new_state.current_turn + 1)
+
 
 def create_game_state(config: Dict[str, Any]) -> GameState:
     return GameState.from_config(config)
@@ -80,7 +84,7 @@ def create_game_state(config: Dict[str, Any]) -> GameState:
 def run_game(game_state: GameState) -> GameState:
     logger = GameEventLogger()
     logger.log_action("game_start", game_state)
-    print_game_state(game_state)
+
     
     while game_state.game_status != "game_over":
         game_state = turn(game_state)
@@ -93,7 +97,7 @@ def main():
     # Create initial game state using config
     config = {
         'board_size': 5,
-        'max_turns': 10,
+        'max_turns': 4,
         'num_players': 2,
         'end_criteria': {'type': 'elimination'},
         'player_one_config': {},
