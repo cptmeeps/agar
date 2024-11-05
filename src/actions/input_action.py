@@ -73,7 +73,7 @@ def get_ai_moves(game_state: GameState, player_id: int) -> Dict[str, Any]:
     world_representation = create_llm_world_representation(game_state, player_id)
     try:
         message_chain = create_message_chain(
-            prompt_path="prompts/game_prompts.txt",
+            prompt_path="src/prompts/game_prompts.txt",
             variables={'world_representation': world_representation}
         )
     except (FileNotFoundError, KeyError, ValueError) as e:

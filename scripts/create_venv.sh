@@ -13,3 +13,5 @@ python3 -m venv venv
 source venv/bin/activate
 
 echo "Virtual environment created and activated successfully!" 
+
+# export ANTHROPIC_API_KEY=""
