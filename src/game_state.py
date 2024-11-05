@@ -14,6 +14,22 @@ class GameState:
     player_two_config: Dict[str, Any]
     turns: Dict[int, Dict[str, Any]]
 
+    def is_valid_state_change(self, new_state: 'GameState', phase: str | None = None) -> bool:
+        """
+        Validates if the state change is legal for the given game phase.
+        
+        Args:
+            new_state: The proposed new GameState
+            phase: Current game phase ('input', 'move', 'combat', 'spawn', 'turn_end'). 
+                  If None, validates general state changes.
+            
+        Returns:
+            bool: True if the state change is valid, False otherwise
+        """
+        # TODO: Implement validation logic for each phase
+        # For now, always return True
+        return True
+
 def create_sample_game_state() -> GameState:
     # Create a simple 5x5 world with some units
     world = {}

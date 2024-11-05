@@ -13,23 +13,43 @@ def turn(game_state: GameState) -> GameState:
     new_state = game_state
     
     # Get input actions first
-    new_state = get_input_action(new_state, (0, 0))
+    temp_state = get_input_action(new_state, (0, 0))
+    if not new_state.is_valid_state_change(temp_state, 'input'):
+        print("Warning: Invalid state change detected during input phase")
+        return new_state
+    new_state = temp_state
     
     # Process all moves first
     for hex_pos in game_state.world.keys():
-        new_state = move_action(new_state, hex_pos)
+        temp_state = move_action(new_state, hex_pos)
+        if not new_state.is_valid_state_change(temp_state, 'move'):
+            print(f"Warning: Invalid state change detected during move phase at {hex_pos}")
+            continue
+        new_state = temp_state
     
     # Then process all combat
     for hex_pos in game_state.world.keys():
-        new_state = combat_action(new_state, hex_pos)
+        temp_state = combat_action(new_state, hex_pos)
+        if not new_state.is_valid_state_change(temp_state, 'combat'):
+            print(f"Warning: Invalid state change detected during combat phase at {hex_pos}")
+            continue
+        new_state = temp_state
     
     # Then process all spawns
     for hex_pos in game_state.world.keys():
-        new_state = spawn_action(new_state, hex_pos)
+        temp_state = spawn_action(new_state, hex_pos)
+        if not new_state.is_valid_state_change(temp_state, 'spawn'):
+            print(f"Warning: Invalid state change detected during spawn phase at {hex_pos}")
+            continue
+        new_state = temp_state
     
     # Finally process all turn end actions
     for hex_pos in game_state.world.keys():
-        new_state = turn_end_action(new_state, hex_pos)
+        temp_state = turn_end_action(new_state, hex_pos)
+        if not new_state.is_valid_state_change(temp_state, 'turn_end'):
+            print(f"Warning: Invalid state change detected during turn end phase at {hex_pos}")
+            continue
+        new_state = temp_state
     
     return GameState(
         **{**new_state.__dict__, 'current_turn': new_state.current_turn + 1}
