@@ -1,6 +1,5 @@
 from typing import Dict, Tuple, Any
-from game_types import Tile
-from game_state import GameState
+from game_state import GameState, Tile
 
 def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     # Get current turn's moves from turns dictionary
