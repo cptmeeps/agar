@@ -1,12 +1,13 @@
 from typing import Dict, Tuple, Any
 import yaml
-from game_types import GameState, Position, Tile, Unit
+from game_types import Position, Tile, Unit
+from game_state import GameState, create_sample_game_state
 from input_action import get_input_action
 from move_action import move_action
 from combat_action import combat_action
 from spawn_action import spawn_action
 from turn_end_action import turn_end_action
-from utils import create_sample_game_state, print_game_state
+from utils import print_game_state
 
 def turn(game_state: GameState) -> GameState:
     new_state = game_state

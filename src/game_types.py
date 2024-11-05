@@ -19,15 +19,3 @@ class Unit:
 class Tile:
   position: Position
   units: List[Unit] = field(default_factory=list)
-
-@dataclass(frozen=True)
-class GameState:
-  world: Dict[Tuple[int, int], Tile]
-  current_turn: int
-  max_turns: int
-  num_players: int
-  game_status: str
-  game_end_criteria: Dict[str, Any]
-  player_one_config: Dict[str, Any]
-  player_two_config: Dict[str, Any]
-  turns: Dict[int, Dict[str, Any]]

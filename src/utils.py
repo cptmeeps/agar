@@ -1,40 +1,7 @@
 import yaml
 from typing import Dict, Any
-from game_types import GameState, Position, Tile, Unit
-
-def create_sample_game_state() -> GameState:
-    # Create a simple 5x5 world with some units
-    world = {}
-    for x in range(5):
-        for y in range(5):
-            pos = (x, y)
-            units = []
-            # Add player 1's units at (0, 2) - left side
-            if x == 0 and y == 2:
-                units = [
-                    Unit(player_id=1, health=1, movement_points=1),
-                    Unit(player_id=1, health=1, movement_points=1)
-                ]
-            # Add player 2's units at (4, 2) - right side
-            elif x == 4 and y == 2:
-                units = [
-                    Unit(player_id=2, health=1, movement_points=1),
-                    Unit(player_id=2, health=1, movement_points=1)
-                ]
-            
-            world[pos] = Tile(Position(x, y), units)
-    
-    return GameState(
-        world=world,
-        current_turn=0,
-        max_turns=10,
-        num_players=2,
-        game_status="in_progress",
-        game_end_criteria={'type': 'elimination'},
-        player_one_config={},
-        player_two_config={},
-        turns={}
-    ) 
+from game_types import Position, Tile, Unit
+from game_state import GameState
 
 def print_game_state(state: GameState):
     print("\n" + "-" * 50)  # Add line break and dashed separator
@@ -122,5 +89,4 @@ def print_game_state(state: GameState):
     print()
 
 if __name__ == "__main__":
-    game_state = create_sample_game_state()
-    print_game_state(game_state) 
+    pass

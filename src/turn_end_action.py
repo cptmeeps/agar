@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Any
-from game_types import GameState
+from game_state import GameState, create_sample_game_state
 
 def turn_end_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     # Only process turn end logic once per turn (at first hex)

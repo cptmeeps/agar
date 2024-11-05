@@ -1,5 +1,6 @@
 from typing import Dict, Tuple, Any
-from game_types import GameState, Tile, Unit
+from game_types import Tile, Unit
+from game_state import GameState, create_sample_game_state
 import json
 
 def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:

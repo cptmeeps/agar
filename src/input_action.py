@@ -1,8 +1,7 @@
 from typing import Dict, Tuple, Any
 import yaml
-from game_types import GameState
+from game_state import GameState, create_sample_game_state
 from llm import create_message_chain, call_llm_api, load_game_prompts
-from utils import create_sample_game_state
 import json
 
 def create_llm_world_representation(game_state: GameState, player_id: int) -> Dict[str, Any]:

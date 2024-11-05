@@ -1,6 +1,4 @@
-P0 - Check that spawn isn't over spawning
-P0 - Add input validation for turn input
-P0 - Add move validation
+
 
 P1 - Rebuilt print_game_state to be more flexible
 P1 - Build single pretty printer for game state

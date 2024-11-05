@@ -1,4 +1,5 @@
-from utils import create_sample_game_state, print_game_state
+from utils import print_game_state
+from game_state import GameState, create_sample_game_state
 from game_engine import run_game
 from input_action import create_llm_world_representation, get_ai_moves, get_input_action
 import yaml
