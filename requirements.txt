@@ -1,6 +1,6 @@
 anthropic
-structlog
-
+pytest==7.4.3
+pytest-cov==4.1.0
 annotated-types==0.7.0
 anyio==4.6.2.post1
 certifi==2024.8.30
