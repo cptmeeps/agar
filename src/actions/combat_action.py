@@ -1,7 +1,6 @@
 from typing import Dict, Tuple, Any
 import random
-from game_types import Tile
-from game_state import GameState
+from game_state import GameState, Tile
 
 def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     # If no units or only one player's units, skip combat
