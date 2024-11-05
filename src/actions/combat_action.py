@@ -1,7 +1,7 @@
 from typing import Dict, Tuple, Any
 import random
 from game_types import Tile
-from game_state import GameState, create_sample_game_state
+from game_state import GameState
 
 def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     # If no units or only one player's units, skip combat
@@ -76,4 +76,4 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     # Update turns dictionary
     turns[game_state.current_turn] = current_turn_data
     
-    return GameState(**{**game_state.__dict__, 'world': world, 'turns': turns}) 
+    return GameState.from_state(game_state, world=world, turns=turns) 

@@ -1,6 +1,6 @@
 from typing import Dict, Tuple, Any
 from game_types import Tile, Unit
-from game_state import GameState, create_sample_game_state
+from game_state import GameState
 import json
 
 def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
@@ -55,14 +55,4 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     
     turns[game_state.current_turn] = current_turn_data
     
-    return GameState(
-        world=world,
-        current_turn=game_state.current_turn,
-        max_turns=game_state.max_turns,
-        num_players=game_state.num_players,
-        game_status=game_state.game_status,
-        game_end_criteria=game_state.game_end_criteria,
-        player_one_config=game_state.player_one_config,
-        player_two_config=game_state.player_two_config,
-        turns=turns
-    ) 
+    return GameState.from_state(game_state, world=world, turns=turns) 

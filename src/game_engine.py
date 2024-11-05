@@ -1,7 +1,7 @@
 from typing import Dict, Tuple, Any
 import yaml
 from game_types import Position, Tile, Unit
-from game_state import GameState, create_sample_game_state
+from game_state import GameState
 from actions.input_action import get_input_action
 from actions.move_action import move_action
 from actions.combat_action import combat_action
@@ -11,7 +11,8 @@ from utils import print_game_state
 
 def turn(game_state: GameState) -> GameState:
     new_state = game_state
-    
+    print(f"Turn {new_state.current_turn}")
+    print(f"Game status: {new_state.game_status}")
     # Get input actions first
     temp_state = get_input_action(new_state, (0, 0))
     if not new_state.is_valid_state_change(temp_state, 'input'):
@@ -51,39 +52,11 @@ def turn(game_state: GameState) -> GameState:
             continue
         new_state = temp_state
     
-    return GameState(
-        **{**new_state.__dict__, 'current_turn': new_state.current_turn + 1}
-    )
+    # Update turn counter using from_state
+    return GameState.from_state(new_state, current_turn=new_state.current_turn + 1)
 
 def create_game_state(config: Dict[str, Any]) -> GameState:
-    # Create a simple 5x5 world with some units
-    world = {}
-    size = config.get('board_size', 5)
-    
-    for x in range(size):
-        for y in range(size):
-            pos = (x, y)
-            units = []
-            # Add player 1's unit at (0, 2) - left side
-            if x == 0 and y == 2:
-                units = [Unit(player_id=1, health=1, movement_points=1)]
-            # Add player 2's unit at (4, 2) - right side
-            elif x == size-1 and y == 2:
-                units = [Unit(player_id=2, health=1, movement_points=1)]
-            
-            world[pos] = Tile(Position(x, y), units)
-    
-    return GameState(
-        world=world,
-        current_turn=1,
-        max_turns=config.get('max_turns', 10),
-        num_players=config.get('num_players', 2),
-        game_status="in_progress",
-        game_end_criteria=config.get('end_criteria', {'type': 'elimination'}),
-        player_one_config=config.get('player_one_config', {}),
-        player_two_config=config.get('player_two_config', {}),
-        turns={}
-    )
+    return GameState.from_config(config)
 
 def run_game(game_state: GameState) -> GameState:
     print_game_state(game_state)
@@ -95,8 +68,16 @@ def run_game(game_state: GameState) -> GameState:
     return game_state
 
 def main():
-    # Create initial game state using sample state
-    initial_state = create_sample_game_state()
+    # Create initial game state using config
+    config = {
+        'board_size': 5,
+        'max_turns': 10,
+        'num_players': 2,
+        'end_criteria': {'type': 'elimination'},
+        'player_one_config': {},
+        'player_two_config': {}
+    }
+    initial_state = GameState.from_config(config)
     game_state = run_game(initial_state)
     print("Game Over")
 

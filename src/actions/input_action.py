@@ -1,6 +1,6 @@
 from typing import Dict, Tuple, Any
 import yaml
-from game_state import GameState, create_sample_game_state
+from game_state import GameState
 from llm import create_message_chain, call_llm_api, load_game_prompts
 import json
 
@@ -161,38 +161,4 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
     }
     
     # Create new game state with updated turns
-    return GameState(
-        world=game_state.world,
-        current_turn=game_state.current_turn,
-        max_turns=game_state.max_turns,
-        num_players=game_state.num_players,
-        game_status=game_state.game_status,
-        game_end_criteria=game_state.game_end_criteria,
-        player_one_config=game_state.player_one_config,
-        player_two_config=game_state.player_two_config,
-        turns=turns
-    )
-
-def main():
-    # Create sample game state
-    game_state = create_sample_game_state()
-    print("\n1. Created sample game state")
-    
-    # Test create_llm_world_representation
-    world_rep = create_llm_world_representation(game_state, player_id=1)
-    print("\n2. World representation for player 1:")
-    print(yaml.dump(world_rep, sort_keys=False))
-    
-    
-    # Test get_ai_moves
-    moves = get_ai_moves(game_state, player_id=1)
-    print("\n4. AI moves generated:")
-    print(yaml.dump(moves, sort_keys=False))
-    
-    # Test get_input_action
-    updated_state = get_input_action(game_state, (0, 0))
-    print("\n5. Final game state after input action:")
-    print(f"Current turn input: {updated_state.current_turn_input}")
-
-if __name__ == "__main__":
-    main() 
+    return GameState.from_state(game_state, turns=turns)
