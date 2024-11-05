@@ -1,6 +1,7 @@
 prompts/
 scripts/
 venv/
+logs/
 
 todo.txt
 requirements.txt

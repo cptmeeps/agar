@@ -1,5 +1,6 @@
 from typing import Dict, Tuple, Any
 from game_state import GameState, Tile, Unit
+from utils.logger import logger
 
 def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     tile = game_state.world[hex_pos]
@@ -37,6 +38,14 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     world[hex_pos] = Tile(
         position=tile.position,
         units=list(tile.units) + [new_unit]
+    )
+    
+    # Log spawn event
+    logger.log_action(
+        "spawn",
+        game_state,
+        position=hex_pos,
+        details={"player_id": player_id}
     )
     
     # Update turns dictionary with spawn information

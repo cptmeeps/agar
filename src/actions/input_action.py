@@ -2,6 +2,7 @@ from typing import Dict, Tuple, Any
 from game_state import GameState
 from utils.llm import create_message_chain, call_llm_api
 import json
+from utils.logger import logger
 
 def create_llm_world_representation(game_state: GameState, player_id: int) -> Dict[str, Any]:
     opponent_id = 2 if player_id == 1 else 1
@@ -76,16 +77,31 @@ def get_ai_moves(game_state: GameState, player_id: int) -> Dict[str, Any]:
             variables={'world_representation': world_representation}
         )
     except (FileNotFoundError, KeyError, ValueError) as e:
-        print(f"Error creating message chain: {e}")
+        logger.log_error(
+            "ai_move_generation",
+            e,
+            game_state,
+            {"player_id": player_id}
+        )
         return {"moves": []}
     
     # Get LLM response
     response = call_llm_api(message_chain)
     try:
         response = json.loads(response)
+        logger.log_action(
+            "ai_move_generation",
+            game_state,
+            details={"player_id": player_id, "moves": response.get("moves", [])}
+        )
         return response
     except (json.JSONDecodeError, AttributeError) as e:
-        print(f"Error parsing moves: {e}")
+        logger.log_error(
+            "ai_move_parsing",
+            e,
+            game_state,
+            {"player_id": player_id, "raw_response": response}
+        )
     
     return {}
 
