@@ -24,8 +24,10 @@ class Tile:
 class PlayerState:
     player_config: Dict[str, Any] = field(default_factory=dict)
     turn_msg_chain: List[Dict[str, str]] = field(default_factory=list)
-    turn_model_output: Dict[str, Any] = field(default_factory=lambda: {'combats': []})
+    turn_model_output: Dict[str, Any] = field(default_factory=lambda: {'moves': []})
     turn_input: Dict[str, Any] = field(default_factory=dict)
+    turn_prompt_chain: List[Dict[str, str]] = field(default_factory=list)
+    turn_prompt_config: List[Dict[str, Any]] = field(default_factory=list)
 
 @dataclass(frozen=True)
 class TurnState:

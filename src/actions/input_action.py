@@ -1,6 +1,7 @@
 from typing import Dict, Tuple, Any
 from game_state import GameState, Tile, PlayerState, TurnState
 from utils.llm import create_message_chain, call_llm_api
+from utils.prompt import generate_prompt_chain
 import json
 from utils.logger import logger
 
@@ -71,11 +72,32 @@ def create_llm_world_representation(game_state: GameState, player_id: int) -> Di
 def get_ai_moves(game_state: GameState, player_id: int) -> Dict[str, Any]:
     # Create game state representation
     world_representation = create_llm_world_representation(game_state, player_id)
+    
+    # Get current player state
+    current_turn_state = game_state.turns[game_state.current_turn]
+    player_state = current_turn_state.player_one if player_id == 1 else current_turn_state.player_two
+    
     try:
-        message_chain = create_message_chain(
-            prompt_path="src/prompts/game_prompts.txt",
-            variables={'world_representation': world_representation}
-        )
+        # Ensure prompt_configs is properly formatted
+        prompt_configs = player_state.turn_prompt_config
+        if not isinstance(prompt_configs, list):
+            prompt_configs = [prompt_configs]
+            
+        # Validate prompt configs
+        for config in prompt_configs:
+            if not isinstance(config, dict) or 'prompt_filepath' not in config:
+                raise ValueError("Each prompt config must be a dictionary with a 'prompt_filepath' key")
+            
+            if 'template_params' not in config:
+                config['template_params'] = {}
+            config['template_params']['world_representation'] = world_representation
+        
+        # Generate prompt chain
+        prompt_chain = generate_prompt_chain(prompt_configs)
+        
+        # Create message chain from prompt chain
+        message_chain = create_message_chain(prompt_chain)
+        
     except (FileNotFoundError, KeyError, ValueError) as e:
         logger.log_error(
             "ai_move_generation",
@@ -106,6 +128,10 @@ def get_ai_moves(game_state: GameState, player_id: int) -> Dict[str, Any]:
     return {}
 
 def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameState:
+    # Get current turn state
+    current_turn = game_state.current_turn
+    current_turn_state = game_state.turns[current_turn]
+    
     # Get moves from both AIs
     player_one_moves = get_ai_moves(game_state, 1)
     player_two_moves = get_ai_moves(game_state, 2)
@@ -161,10 +187,6 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
                 'units': units_to_move
             })
 
-    # Get current turn state
-    current_turn = game_state.current_turn
-    current_turn_state = game_state.turns[current_turn]
-    
     # Create new turn state with player states including the moves
     new_turn_state = TurnState(
         turn_number=current_turn_state.turn_number,
@@ -173,13 +195,17 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
             player_config=current_turn_state.player_one.player_config,
             turn_msg_chain=current_turn_state.player_one.turn_msg_chain,
             turn_model_output=current_turn_state.player_one.turn_model_output,
-            turn_input={}
+            turn_input={},
+            turn_prompt_chain=current_turn_state.player_one.turn_prompt_chain,
+            turn_prompt_config=current_turn_state.player_one.turn_prompt_config
         ),
         player_two=PlayerState(
             player_config=current_turn_state.player_two.player_config,
             turn_msg_chain=current_turn_state.player_two.turn_msg_chain,
             turn_model_output=current_turn_state.player_two.turn_model_output,
-            turn_input={}
+            turn_input={},
+            turn_prompt_chain=current_turn_state.player_two.turn_prompt_chain,
+            turn_prompt_config=current_turn_state.player_two.turn_prompt_config
         ),
         input_moves=all_moves
     )

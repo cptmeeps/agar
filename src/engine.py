@@ -100,8 +100,22 @@ def main():
         'max_turns': 4,
         'num_players': 2,
         'end_criteria': {'type': 'elimination'},
-        'player_one_config': {},
-        'player_two_config': {}
+        'player_one_config': {
+            'turn_prompt_config': [
+                {
+                    'prompt_filepath': 'game_prompts.txt',
+                    'template_params': {}
+                }
+            ]
+        },
+        'player_two_config': {
+            'turn_prompt_config': [
+                {
+                    'prompt_filepath': 'game_prompts.txt',
+                    'template_params': {}
+                }
+            ]
+        }
     }
     initial_state = GameState.from_config(config)
     game_state = run_game(initial_state)
