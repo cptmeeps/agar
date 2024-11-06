@@ -76,62 +76,42 @@ def get_ai_moves(game_state: GameState, player_id: int) -> Dict[str, Any]:
     # Get current player state
     current_turn_state = game_state.turns[game_state.current_turn]
     player_state = current_turn_state.player_one if player_id == 1 else current_turn_state.player_two
+
+    # Ensure prompt_configs is properly formatted
+    prompt_configs = player_state.turn_prompt_config
+    if not isinstance(prompt_configs, list):
+        prompt_configs = [prompt_configs]
     
-    try:
-        # Ensure prompt_configs is properly formatted
-        prompt_configs = player_state.turn_prompt_config
-        if not isinstance(prompt_configs, list):
-            prompt_configs = [prompt_configs]
-            
-        # Validate prompt configs
-        for config in prompt_configs:
-            if not isinstance(config, dict) or 'prompt_filepath' not in config:
-                raise ValueError("Each prompt config must be a dictionary with a 'prompt_filepath' key")
-            
-            if 'template_params' not in config:
-                config['template_params'] = {}
-            config['template_params']['world_representation'] = world_representation
+    # Validate prompt configs
+    for config in prompt_configs:
+        if not isinstance(config, dict) or 'prompt_filepath' not in config:
+            raise ValueError("Each prompt config must be a dictionary with a 'prompt_filepath' key")
         
-        # Generate prompt chain
-        prompt_chain = generate_prompt_chain(prompt_configs)
-        
-        # Create message chain from prompt chain
-        message_chain = create_message_chain(prompt_chain)
-        
-    except (FileNotFoundError, KeyError, ValueError) as e:
-        logger.log_error(
-            "ai_move_generation",
-            e,
-            game_state,
-            {"player_id": player_id}
-        )
-        return {"moves": []}
+        if 'template_params' not in config:
+            config['template_params'] = {}
+        config['template_params']['world_representation'] = world_representation
+    
+    # Generate prompt chain
+    prompt_chain = generate_prompt_chain(prompt_configs)
+
+    # Create message chain from prompt chain
+    message_chain = create_message_chain(prompt_chain)
     
     # Get LLM response
     response = call_llm_api(message_chain)
-    try:
-        response = json.loads(response)
-        logger.log_action(
-            "ai_move_generation",
-            game_state,
-            details={"player_id": player_id, "moves": response.get("moves", [])}
-        )
-        return response
-    except (json.JSONDecodeError, AttributeError) as e:
-        logger.log_error(
-            "ai_move_parsing",
-            e,
-            game_state,
-            {"player_id": player_id, "raw_response": response}
-        )
-    
-    return {}
+    response = json.loads(response)
+    logger.log_action(
+        "ai_move_generation",
+        game_state,
+        details={"player_id": player_id, "moves": response.get("moves", [])}
+    )
+    return response
 
 def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameState:
     # Get current turn state
     current_turn = game_state.current_turn
     current_turn_state = game_state.turns[current_turn]
-    
+
     # Get moves from both AIs
     player_one_moves = get_ai_moves(game_state, 1)
     player_two_moves = get_ai_moves(game_state, 2)
@@ -141,7 +121,7 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
     
     # Track remaining units at each source position for each player
     remaining_units = {}
-    
+
     # First pass: Initialize remaining units count
     for source, player_moves in [
         (1, player_one_moves.get('moves', [])), 
@@ -159,7 +139,7 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
                     remaining_units[source_pos][player_id] = sum(
                         1 for unit in source_tile.units if unit.player_id == player_id
                     )
-    
+
     # Process and validate moves for each player
     for source, player_moves in [
         (1, player_one_moves.get('moves', [])), 
@@ -195,7 +175,7 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
             player_config=current_turn_state.player_one.player_config,
             turn_msg_chain=current_turn_state.player_one.turn_msg_chain,
             turn_model_output=current_turn_state.player_one.turn_model_output,
-            turn_input={},
+            turn_input=current_turn_state.player_one.turn_input,
             turn_prompt_chain=current_turn_state.player_one.turn_prompt_chain,
             turn_prompt_config=current_turn_state.player_one.turn_prompt_config
         ),
@@ -203,7 +183,7 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
             player_config=current_turn_state.player_two.player_config,
             turn_msg_chain=current_turn_state.player_two.turn_msg_chain,
             turn_model_output=current_turn_state.player_two.turn_model_output,
-            turn_input={},
+            turn_input=current_turn_state.player_two.turn_input,
             turn_prompt_chain=current_turn_state.player_two.turn_prompt_chain,
             turn_prompt_config=current_turn_state.player_two.turn_prompt_config
         ),

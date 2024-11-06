@@ -11,46 +11,32 @@ from utils.event_logger import GameEventLogger
 def turn(game_state: GameState) -> GameState:
     logger = GameEventLogger()
     new_state = game_state
-    # print(f"Turn {new_state.current_turn}")
-    # print(f"Game status: {new_state.game_status}")
     
     # Log turn start
     logger.log_action("turn_start", new_state)
     
     # Get input actions first
-    try:
-        temp_state = get_input_action(new_state, (0, 0))
-        if not new_state.is_valid_state_change(temp_state, 'input'):
-            logger.log_error("input_validation", ValueError("Invalid state change"), new_state)
-            return new_state
-        new_state = temp_state
-    except Exception as e:
-        logger.log_error("input_action", e, new_state)
+    temp_state = get_input_action(new_state, (0, 0))
+    if not new_state.is_valid_state_change(temp_state, 'input'):
+        logger.log_error("input_validation", ValueError("Invalid state change"), new_state)
         return new_state
+    new_state = temp_state
 
     # Process all moves first
     for hex_pos in game_state.world.keys():
-        try:
-            temp_state = move_action(new_state, hex_pos)
-            if not new_state.is_valid_state_change(temp_state, 'move'):
-                logger.log_error("move_validation", ValueError("Invalid state change"), new_state, {"position": hex_pos})
-                continue
-            new_state = temp_state
-        except Exception as e:
-            logger.log_error("move_action", e, new_state, {"position": hex_pos})
+        temp_state = move_action(new_state, hex_pos)
+        if not new_state.is_valid_state_change(temp_state, 'move'):
+            logger.log_error("move_validation", ValueError("Invalid state change"), new_state, {"position": hex_pos})
             continue
+        new_state = temp_state
 
     # Then process all combat
     for hex_pos in game_state.world.keys():
-        try:
-            temp_state = combat_action(new_state, hex_pos)
-            if not new_state.is_valid_state_change(temp_state, 'combat'):
-                logger.log_error("combat_validation", ValueError("Invalid state change"), new_state, {"position": hex_pos})
-                continue
-            new_state = temp_state
-        except Exception as e:
-            logger.log_error("combat_action", e, new_state, {"position": hex_pos})
+        temp_state = combat_action(new_state, hex_pos)
+        if not new_state.is_valid_state_change(temp_state, 'combat'):
+            logger.log_error("combat_validation", ValueError("Invalid state change"), new_state, {"position": hex_pos})
             continue
+        new_state = temp_state
 
     # Then process all spawns
     for hex_pos in game_state.world.keys():
@@ -85,7 +71,6 @@ def run_game(game_state: GameState) -> GameState:
     logger = GameEventLogger()
     logger.log_action("game_start", game_state)
 
-    
     while game_state.game_status != "game_over":
         game_state = turn(game_state)
         print_game_state(game_state)

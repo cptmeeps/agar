@@ -65,7 +65,9 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
                 **current_turn_state.player_one.turn_model_output,
                 'combats': [*current_turn_state.player_one.turn_model_output.get('combats', []), combat_record]
             },
-            turn_input=current_turn_state.player_one.turn_input
+            turn_input=current_turn_state.player_one.turn_input,
+            turn_prompt_chain=current_turn_state.player_one.turn_prompt_chain,
+            turn_prompt_config=current_turn_state.player_one.turn_prompt_config
         ),
         player_two=PlayerState(
             player_config=current_turn_state.player_two.player_config,
@@ -74,7 +76,9 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
                 **current_turn_state.player_two.turn_model_output,
                 'combats': [*current_turn_state.player_two.turn_model_output.get('combats', []), combat_record]
             },
-            turn_input=current_turn_state.player_two.turn_input
+            turn_input=current_turn_state.player_two.turn_input,
+            turn_prompt_chain=current_turn_state.player_two.turn_prompt_chain,
+            turn_prompt_config=current_turn_state.player_two.turn_prompt_config
         )
     )
     

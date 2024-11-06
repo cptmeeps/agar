@@ -1,6 +1,7 @@
 from typing import Dict, Tuple, Any
-from game_state import GameState, Tile, Unit, PlayerState, TurnState
+from game_state import GameState, Tile, Unit, PlayerState, TurnState, SpawnStateChange
 from utils.logger import logger
+from game_state import GameEvent
 
 def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     tile = game_state.world[hex_pos]
@@ -69,7 +70,9 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
                 **current_turn_state.player_one.turn_model_output,
                 'spawns': [*current_turn_state.player_one.turn_model_output.get('spawns', []), spawn_record]
             },
-            turn_input=current_turn_state.player_one.turn_input
+            turn_input=current_turn_state.player_one.turn_input,
+            turn_prompt_chain=current_turn_state.player_one.turn_prompt_chain,
+            turn_prompt_config=current_turn_state.player_one.turn_prompt_config
         ),
         player_two=PlayerState(
             player_config=current_turn_state.player_two.player_config,
@@ -78,7 +81,9 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
                 **current_turn_state.player_two.turn_model_output,
                 'spawns': [*current_turn_state.player_two.turn_model_output.get('spawns', []), spawn_record]
             },
-            turn_input=current_turn_state.player_two.turn_input
+            turn_input=current_turn_state.player_two.turn_input,
+            turn_prompt_chain=current_turn_state.player_two.turn_prompt_chain,
+            turn_prompt_config=current_turn_state.player_two.turn_prompt_config
         ),
         input_moves=current_turn_state.input_moves,
         move_actions=current_turn_state.move_actions,
@@ -90,4 +95,13 @@ def spawn_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     turns = dict(game_state.turns)
     turns[current_turn] = new_turn_state
     
-    return GameState.from_state(game_state, world=world, turns=turns) 
+    spawn_event = GameEvent(
+        type=GameEvent.Type.SPAWN,
+        data={
+            'position': hex_pos,
+            'new_unit': new_unit,
+            'turn_state': new_turn_state
+        }
+    )
+    
+    return game_state.apply_event(spawn_event) 

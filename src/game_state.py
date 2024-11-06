@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional
+from enum import Enum
 
 @dataclass(frozen=True)
 class Position:
@@ -39,6 +40,16 @@ class TurnState:
     move_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'source': (x,y), 'destination': (x,y), 'units': n, 'player_id': id}, ...]
     spawn_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'position': (x,y), 'player_id': id}, ...]
     combat_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'position': (x,y), 'player_1_casualties': n, 'player_2_casualties': n}, ...]
+
+@dataclass(frozen=True)
+class SpawnStateChange:
+    world_updates: Dict[Tuple[int, int], Tile]
+    turn_state_update: TurnState
+    
+@dataclass(frozen=True)
+class CombatStateChange:
+    world_updates: Dict[Tuple[int, int], Tile]
+    turn_state_update: TurnState
 
 @dataclass(frozen=True)
 class GameState:
@@ -83,7 +94,15 @@ class GameState:
         for turn_num in range(1, max_turns + 1):
             turns[turn_num] = TurnState(
                 turn_number=turn_num,
-                world=world
+                world=world,
+                player_one=PlayerState(
+                    player_config=config.get('player_one_config', {}),
+                    turn_prompt_config=config.get('player_one_config', {}).get('turn_prompt_config', [])
+                ),
+                player_two=PlayerState(
+                    player_config=config.get('player_two_config', {}),
+                    turn_prompt_config=config.get('player_two_config', {}).get('turn_prompt_config', [])
+                )
             )
 
         return cls(
@@ -109,3 +128,59 @@ class GameState:
         # TODO: Implement validation logic for each phase
         # For now, always return True
         return True
+
+    @classmethod
+    def builder(cls, state: 'GameState') -> 'GameStateBuilder':
+        return GameStateBuilder(state)
+
+    def apply_spawn_change(self, change: SpawnStateChange) -> 'GameState':
+        world = dict(self.world)
+        world.update(change.world_updates)
+        
+        turns = dict(self.turns)
+        turns[self.current_turn] = change.turn_state_update
+        
+        return GameState.from_state(self, world=world, turns=turns)
+
+    def apply_event(self, event: 'GameEvent') -> 'GameState':
+        if event.type == GameEvent.Type.SPAWN:
+            return self._apply_spawn_event(event.data)
+        elif event.type == GameEvent.Type.COMBAT:
+            return self._apply_combat_event(event.data)
+        # ... etc
+        
+    def _apply_spawn_event(self, data: Dict[str, Any]) -> 'GameState':
+        world = dict(self.world)
+        turns = dict(self.turns)
+        # Apply specific spawn changes
+        return GameState.from_state(self, world=world, turns=turns)
+
+class GameStateBuilder:
+    def __init__(self, original_state: GameState):
+        self._original = original_state
+        self._changes = {}
+        
+    def with_world(self, world: Dict[Tuple[int, int], Tile]) -> 'GameStateBuilder':
+        self._changes['world'] = world
+        return self
+        
+    def with_turn_state(self, turn: int, turn_state: TurnState) -> 'GameStateBuilder':
+        turns = dict(self._original.turns)
+        turns[turn] = turn_state
+        self._changes['turns'] = turns
+        return self
+        
+    def build(self) -> GameState:
+        state_dict = self._original.__dict__.copy()
+        state_dict.update(self._changes)
+        return GameState(**state_dict)
+
+class GameEvent:
+    class Type(Enum):
+        SPAWN = "spawn"
+        COMBAT = "combat"
+        MOVE = "move"
+        
+    def __init__(self, type: Type, data: Dict[str, Any]):
+        self.type = type
+        self.data = data

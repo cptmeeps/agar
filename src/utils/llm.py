@@ -19,6 +19,11 @@ def load_game_prompts(filename: str) -> str:
 # Functions
 def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
   # pretty_print_message_chain(message_chain)
+  # Print message chain details
+  # print(f"\nTotal messages in chain: {len(message_chain)}")
+  # for i, message in enumerate(message_chain):
+  #   print(f"Message {i + 1} has {len(message)} key-value pairs")
+    
   system_message, updated_chain = extract_system_message(message_chain)
 
   try:
@@ -35,12 +40,17 @@ def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
   except Exception as e:
     return f"Error calling Anthropic API: {str(e)}"
 
-def create_message_chain(prompt_path: str, variables: Dict[str, Any] = None) -> List[Dict[str, str]]:
+def create_message_chain(prompt_input: str | List[Dict[str, str]], variables: Dict[str, Any] = None) -> List[Dict[str, str]]:
+    # If input is already a list of messages, just process variables if needed
+    if isinstance(prompt_input, list):
+        return prompt_input
+        
+    # Otherwise treat as file path
     try:
-        with open(prompt_path, 'r') as f:
+        with open(prompt_input, 'r') as f:
             template_text = f.read()
     except FileNotFoundError:
-        raise FileNotFoundError(f"Could not find prompt file at {prompt_path}")
+        raise FileNotFoundError(f"Could not find prompt file at {prompt_input}")
     
     # Convert variables to YAML string format if they exist
     if variables:

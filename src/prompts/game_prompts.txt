@@ -341,3 +341,4 @@
   content: |
     Current game state:
     ${world_representation}
+    Your response must be valid JSON.
