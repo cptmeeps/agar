@@ -1,7 +1,8 @@
 from typing import Dict, Tuple, Any
 import random
-from game_state import GameState, Tile, PlayerState, TurnState
+from game_state import GameState, Tile, PlayerState, TurnState, Unit
 from utils.logger import logger
+import json
 
 def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     tile = game_state.world[hex_pos]
@@ -46,8 +47,8 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     # Create combat record
     combat_record = {
         'position': hex_pos,
-        'player_1_casualties': damage_dealt.get(1, 0),
-        'player_2_casualties': damage_dealt.get(2, 0)
+        'player_1_casualties': min(damage_dealt.get(1, 0), initial_counts.get(1, 0)),
+        'player_2_casualties': min(damage_dealt.get(2, 0), initial_counts.get(2, 0))
     }
     
     # Update turn state
@@ -96,3 +97,82 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
     )
     
     return GameState.from_state(game_state, world=world, turns=turns) 
+
+def main():
+    # Create a test configuration similar to input_action
+    test_config = {
+        'board_size': 5,
+        'max_turns': 10,
+        'num_players': 2,
+        'player_one_config': {
+            'turn_prompt_config': [{
+                'prompt_filepath': 'test_prompts.txt',
+                'template_params': {}
+            }]
+        },
+        'player_two_config': {
+            'turn_prompt_config': [{
+                'prompt_filepath': 'test_prompts.txt',
+                'template_params': {}
+            }]
+        }
+    }
+
+    # Create initial game state
+    game_state = GameState.from_config(test_config)
+    
+    # Test position where combat will occur
+    combat_pos = (2, 2)
+    
+    print("\n" + "="*40)
+    print("1. Testing Combat Setup")
+    print("Expected: A tile with units from multiple players")
+    print("="*80)
+    
+    # Manually add units from different players to create a combat scenario
+    world = dict(game_state.world)
+    test_tile = Tile(
+        position=combat_pos,
+        units=[
+            Unit(player_id=1, health=1, movement_points=1),  # Add 3 units for player 1
+            Unit(player_id=1, health=1, movement_points=1),
+            Unit(player_id=1, health=1, movement_points=1),
+            Unit(player_id=2, health=1, movement_points=1),  # Add 2 units for player 2
+            Unit(player_id=2, health=1, movement_points=1),
+        ]
+    )
+    world[combat_pos] = test_tile
+    
+    # Create new game state with our test setup
+    game_state = GameState.builder(game_state).with_world(world).build()
+    
+    print(f"\nInitial state at position {combat_pos}:")
+    print(f"Player 1 units: {sum(1 for unit in test_tile.units if unit.player_id == 1)}")
+    print(f"Player 2 units: {sum(1 for unit in test_tile.units if unit.player_id == 2)}")
+
+    print("\n" + "="*80)
+    print("2. Testing Combat Resolution")
+    print("Expected: Combat results showing casualties and survivors")
+    print("="*80)
+    
+    try:
+        # Execute combat
+        new_state = combat_action(game_state, combat_pos)
+        
+        # Get the resulting tile
+        result_tile = new_state.world[combat_pos]
+        
+        print("\nCombat Results:")
+        print(f"Surviving Player 1 units: {sum(1 for unit in result_tile.units if unit.player_id == 1)}")
+        print(f"Surviving Player 2 units: {sum(1 for unit in result_tile.units if unit.player_id == 2)}")
+        
+        # Print combat records
+        current_turn = new_state.turns[new_state.current_turn]
+        print("\nCombat Records:")
+        print(json.dumps(current_turn.combat_actions, indent=2))
+        
+    except Exception as e:
+        print(f"❌ Error in combat resolution: {str(e)}")
+
+if __name__ == "__main__":
+    main() 

@@ -214,48 +214,69 @@ def main():
         'num_players': 2,
         'player_one_config': {
             'turn_prompt_config': [{
-                'prompt_filepath': 'prompts/basic_strategy.txt',
+                'prompt_filepath': 'test_prompts.txt',
                 'template_params': {}
             }]
         },
         'player_two_config': {
             'turn_prompt_config': [{
-                'prompt_filepath': 'prompts/basic_strategy.txt',
+                'prompt_filepath': 'test_prompts.txt',
                 'template_params': {}
             }]
         }
     }
 
-    # Create initial game state
+    # Create initial game state (will have default units at (0,2) and (4,2))
     game_state = GameState.from_config(test_config)
 
-    # Test create_llm_world_representation
-    print("\nTesting world representation for Player 1:")
+    print("\n" + "="*80)
+    print("1. Testing create_llm_world_representation")
+    print("Expected: A JSON structure showing the game board state from Player 1's perspective")
+    print("This should include: game info, board cells, and territory control information")
+    print("="*80)
     world_rep = create_llm_world_representation(game_state, 1)
-    print(json.dumps(world_rep, indent=2))
+    print("\nActual World representation for Player 1:")
+    print("Game Info:", json.dumps(world_rep['game_info'], indent=2))
+    print("\nControlled Territories:", json.dumps(world_rep['board']['controlled_territories'], indent=2))
+    print("\nSample of Board Cells (first 3):", json.dumps(dict(list(world_rep['board']['cells'].items())[:3]), indent=2))
 
-    # Test get_ai_moves
-    print("\nTesting AI moves for Player 1:")
+    print("\n" + "="*80)
+    print("2. Testing get_ai_moves")
+    print("Expected: Two sets of moves, one from each AI player")
+    print("Each move should contain 'source', 'destination', and 'units' fields")
+    print("="*80)
     try:
-        moves = get_ai_moves(game_state, 1)
-        print(json.dumps(moves, indent=2))
-    except Exception as e:
-        print(f"Error getting AI moves: {str(e)}")
-
-    # Test full input action
-    print("\nTesting full input action:")
-    try:
-        new_state = get_input_action(game_state, (0, 0))  # Test coordinates
+        print("\nAttempting to get moves for Player 1:")
+        player_one_moves = get_ai_moves(game_state, 1)
+        print("\nPlayer 1 moves (should show movement commands):")
+        print(json.dumps(player_one_moves, indent=2))
         
-        # Print some verification info
+        print("\nAttempting to get moves for Player 2:")
+        player_two_moves = get_ai_moves(game_state, 2)
+        print("\nPlayer 2 moves (should show movement commands):")
+        print(json.dumps(player_two_moves, indent=2))
+    except Exception as e:
+        print(f"❌ Error getting AI moves: {str(e)}")
+        print("Expected format should be: {'moves': [{'source': [x,y], 'destination': [x,y], 'units': n}, ...]}")
+
+    print("\n" + "="*80)
+    print("3. Testing get_input_action")
+    print("Expected: A new game state with processed and validated moves from both players")
+    print("This should combine and validate moves from both AIs while respecting unit limitations")
+    print("="*80)
+    try:
+        new_state = get_input_action(game_state, (0, 2))
+        
         current_turn = new_state.turns[new_state.current_turn]
-        print("\nPlayer 1 moves:", current_turn.player_one.turn_model_output.get('moves', []))
-        print("\nPlayer 2 moves:", current_turn.player_two.turn_model_output.get('moves', []))
-        print("\nProcessed input moves:", current_turn.input_moves)
+        print("\nProcessed moves summary:")
+        print("\nPlayer 1 submitted moves (raw):", 
+              json.dumps(current_turn.player_one.turn_model_output.get('moves', []), indent=2))        
+        print("\nPlayer 2 submitted moves (raw):", 
+              json.dumps(current_turn.player_two.turn_model_output.get('moves', []), indent=2))
         
     except Exception as e:
-        print(f"Error in input action: {str(e)}")
+        print(f"❌ Error in input action: {str(e)}")
+        print("Check if moves are valid and units are available at source positions")
 
 if __name__ == "__main__":
-    #python src/actions/input_action.py
     main()

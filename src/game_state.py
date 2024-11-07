@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Any, Optional
 from enum import Enum
 
+
 @dataclass(frozen=True)
 class Position:
     x: int 
@@ -162,6 +163,44 @@ class GameState:
         turns = dict(self.turns)
         # Apply specific spawn changes
         return GameState.from_state(self, world=world, turns=turns)
+
+    def print_world(self):
+        """Helper function to print the current world state in a grid format."""
+        # Find the bounds of the world
+        xs = [pos[0] for pos in self.world.keys()]
+        ys = [pos[1] for pos in self.world.keys()]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+
+        print("\nWorld:")
+        print("-" * 40)  
+        # Print header
+        print("    ", end="")
+        for x in range(min_x, max_x + 1):
+            print(f"|{x:^5}", end="")
+        print("|")
+        
+        # Print separator line
+        print("    " + "-" * ((max_x - min_x + 1) * 6 + 1))
+        
+        for y in range(min_y, max_y + 1):
+            print(f"{y:2d}  ", end="")
+            for x in range(min_x, max_x + 1):
+                tile = self.world.get((x, y), None)
+                counts = {1: 0, 2: 0}
+                if tile and tile.units:
+                    for unit in tile.units:
+                        counts[unit.player_id] = counts.get(unit.player_id, 0) + 1
+                
+                p1_display = '•' if counts[1] == 0 else str(counts[1])
+                p2_display = '•' if counts[2] == 0 else str(counts[2])
+                print(f"|{p1_display:>2} {p2_display:<2}", end="")
+            print("|")
+        
+        # Print separator line
+        print("    " + "-" * ((max_x - min_x + 1) * 6 + 1))
+        print("     " + "P1 P2 " * (max_x - min_x + 1))
+        print()
 
 class GameStateBuilder:
     def __init__(self, original_state: GameState):
