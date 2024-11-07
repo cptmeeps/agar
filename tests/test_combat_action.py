@@ -1,6 +1,6 @@
 import pytest
-from actions.combat_action import combat_action
-from game_state import GameState, Unit, Tile, Position
+from combat_action import combat_action
+from game_state import GameState, Unit, Tile, Position, TurnState, PlayerState
 import random
 
 @pytest.fixture

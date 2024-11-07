@@ -2,6 +2,9 @@ from typing import Dict, Any
 from game_state import GameState
 
 def print_game_state(state: GameState):
+    # Store current turn at the beginning
+    current_turn = state.current_turn - 1
+    
     print("\n\n" + "-" * 50)  # Add line break and dashed separator
     
     # Find the bounds of the world
@@ -11,7 +14,7 @@ def print_game_state(state: GameState):
     min_y, max_y = min(ys), max(ys)
     
     # Print game status
-    print(f"Turn: {state.current_turn - 1}/{state.max_turns - 1}")
+    print(f"Turn: {current_turn}/{state.max_turns}")
     print(f"Game Status: {state.game_status}")
     
     
@@ -20,13 +23,10 @@ def print_game_state(state: GameState):
     print("-" * 40)
     print("p_id\tsrc\tdest\tunits")
     
-    # need to get the previous turn state because ???
-    current_turn_state = state.turns.get(state.current_turn - 1)
-    if current_turn_state and current_turn_state.input_moves:
-        for source_pos, players in current_turn_state.input_moves.items():
-            for player_id, move_list in players.items():
-                for move in move_list:
-                    print(f"{player_id}\t{source_pos}\t{move['destination']}\t{move['units']}")
+    current_turn_state = state.turns.get(current_turn)
+    if current_turn_state and current_turn_state.move_actions:  # Changed to use move_actions instead of input_moves
+        for move in current_turn_state.move_actions:
+            print(f"{move['player_id']}\t{move['source']}\t{move['destination']}\t{move['units']}")
     else:
         print("No moves")
     

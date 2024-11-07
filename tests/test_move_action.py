@@ -1,5 +1,5 @@
 import pytest
-from actions.move_action import move_action
+from move_action import move_action
 from game_state import GameState, Unit, Tile, Position, TurnState, PlayerState
 
 def test_move_action_basic(initial_game_state):

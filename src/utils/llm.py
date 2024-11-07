@@ -18,12 +18,6 @@ def load_game_prompts(filename: str) -> str:
 
 # Functions
 def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
-  # pretty_print_message_chain(message_chain)
-  # Print message chain details
-  # print(f"\nTotal messages in chain: {len(message_chain)}")
-  # for i, message in enumerate(message_chain):
-  #   print(f"Message {i + 1} has {len(message)} key-value pairs")
-    
   system_message, updated_chain = extract_system_message(message_chain)
 
   try:
@@ -35,10 +29,18 @@ def call_llm_api(message_chain: List[Dict[str, str]]) -> str:
       messages=updated_chain,
       system=system_message
     )
-    # print(f"\n\nllm.py Response: {response}\n\n")
+    
+    # Check response status
+    if hasattr(response, 'status_code') and response.status_code != 200:
+        print(f"Warning: LLM API returned non-200 status code: {response.status_code}")
+        print(f"Response payload: {response}")
+        return ""  # Return empty string on error
+        
     return process_model_output(response)
   except Exception as e:
-    return f"Error calling Anthropic API: {str(e)}"
+    print(f"Error calling Anthropic API: {str(e)}")
+    print(f"Full error details: {e}")
+    return ""
 
 def create_message_chain(prompt_input: str | List[Dict[str, str]], variables: Dict[str, Any] = None) -> List[Dict[str, str]]:
     # If input is already a list of messages, just process variables if needed

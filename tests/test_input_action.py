@@ -1,5 +1,5 @@
 import pytest
-from actions.input_action import (
+from input_action import (
     create_llm_world_representation,
     get_ai_moves,
     get_input_action
@@ -87,8 +87,8 @@ def test_create_llm_world_representation_territories(sample_game_state):
     assert {"x": 0, "y": 0} in your_territory
     assert {"x": 2, "y": 2} in enemy_territory
 
-@patch('actions.input_action.call_llm_api')
-@patch('actions.input_action.create_message_chain')
+@patch('input_action.call_llm_api')
+@patch('input_action.create_message_chain')
 def test_get_ai_moves_success(mock_create_chain, mock_call_api, sample_game_state):
     mock_create_chain.return_value = ["test chain"]
     mock_call_api.return_value = '{"moves": [{"source": [0, 0], "destination": [1, 0], "units": 1}]}'
@@ -99,8 +99,8 @@ def test_get_ai_moves_success(mock_create_chain, mock_call_api, sample_game_stat
     assert len(result["moves"]) == 1
     assert result["moves"][0]["source"] == [0, 0]
 
-@patch('actions.input_action.call_llm_api')
-@patch('actions.input_action.create_message_chain')
+@patch('input_action.call_llm_api')
+@patch('input_action.create_message_chain')
 def test_get_ai_moves_invalid_response(mock_create_chain, mock_call_api, sample_game_state):
     mock_create_chain.return_value = ["test chain"]
     mock_call_api.return_value = 'invalid json'

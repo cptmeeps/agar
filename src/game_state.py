@@ -30,6 +30,13 @@ class PlayerState:
     turn_prompt_chain: List[Dict[str, str]] = field(default_factory=list)
     turn_prompt_config: List[Dict[str, Any]] = field(default_factory=list)
 
+    @classmethod
+    def from_state(cls, state: 'PlayerState', **updates) -> 'PlayerState':
+        """Creates a new PlayerState from an existing one with optional updates."""
+        state_dict = state.__dict__.copy()
+        state_dict.update(updates)
+        return cls(**state_dict)
+
 @dataclass(frozen=True)
 class TurnState:
     turn_number: int = 1
@@ -131,6 +138,7 @@ class GameState:
 
     @classmethod
     def builder(cls, state: 'GameState') -> 'GameStateBuilder':
+        """Creates a builder initialized with the current state"""
         return GameStateBuilder(state)
 
     def apply_spawn_change(self, change: SpawnStateChange) -> 'GameState':
@@ -159,18 +167,24 @@ class GameStateBuilder:
     def __init__(self, original_state: GameState):
         self._original = original_state
         self._changes = {}
-        
+    
     def with_world(self, world: Dict[Tuple[int, int], Tile]) -> 'GameStateBuilder':
+        """Updates the world state"""
         self._changes['world'] = world
         return self
-        
-    def with_turn_state(self, turn: int, turn_state: TurnState) -> 'GameStateBuilder':
-        turns = dict(self._original.turns)
-        turns[turn] = turn_state
+    
+    def with_turns(self, turns: Dict[int, TurnState]) -> 'GameStateBuilder':
+        """Updates the turns dictionary"""
         self._changes['turns'] = turns
+        return self
+    # TODO: Check if this is correct, I don't think there is a current_turn in the GameState class
+    def with_current_turn(self, turn: int) -> 'GameStateBuilder':
+        """Updates the current turn number"""
+        self._changes['current_turn'] = turn
         return self
         
     def build(self) -> GameState:
+        """Creates new GameState with all changes applied"""
         state_dict = self._original.__dict__.copy()
         state_dict.update(self._changes)
         return GameState(**state_dict)

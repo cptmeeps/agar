@@ -1,6 +1,6 @@
 import pytest
-from actions.spawn_action import spawn_action
-from game_state import GameState, Unit, Tile, Position, PlayerState, TurnState
+from spawn_action import spawn_action
+from game_state import GameState, Unit, Tile, Position, TurnState, PlayerState
 
 def test_spawn_action_basic(initial_game_state):
     # Create a tile with one unit

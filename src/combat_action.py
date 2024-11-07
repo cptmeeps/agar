@@ -43,10 +43,6 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
         units=surviving_units
     )
     
-    # Get current turn state and create updated version
-    current_turn = game_state.current_turn
-    current_turn_state = game_state.turns[current_turn]
-    
     # Create combat record
     combat_record = {
         'position': hex_pos,
@@ -54,37 +50,43 @@ def combat_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
         'player_2_casualties': damage_dealt.get(2, 0)
     }
     
-    # Create new turn state with updated world and combat information
+    # Update turn state
+    turns = dict(game_state.turns)
+    current_turn = game_state.current_turn
+    current_turn_state = game_state.turns[current_turn]
+    
+    # Update player states using from_state
+    new_player_one = PlayerState.from_state(
+        current_turn_state.player_one,
+        turn_model_output={
+            **current_turn_state.player_one.turn_model_output,
+            'combats': [*current_turn_state.player_one.turn_model_output.get('combats', []), combat_record]
+        }
+    )
+
+    new_player_two = PlayerState.from_state(
+        current_turn_state.player_two,
+        turn_model_output={
+            **current_turn_state.player_two.turn_model_output,
+            'combats': [*current_turn_state.player_two.turn_model_output.get('combats', []), combat_record]
+        }
+    )
+
     new_turn_state = TurnState(
         turn_number=current_turn_state.turn_number,
         world=world,
-        player_one=PlayerState(
-            player_config=current_turn_state.player_one.player_config,
-            turn_msg_chain=current_turn_state.player_one.turn_msg_chain,
-            turn_model_output={
-                **current_turn_state.player_one.turn_model_output,
-                'combats': [*current_turn_state.player_one.turn_model_output.get('combats', []), combat_record]
-            },
-            turn_input=current_turn_state.player_one.turn_input,
-            turn_prompt_chain=current_turn_state.player_one.turn_prompt_chain,
-            turn_prompt_config=current_turn_state.player_one.turn_prompt_config
-        ),
-        player_two=PlayerState(
-            player_config=current_turn_state.player_two.player_config,
-            turn_msg_chain=current_turn_state.player_two.turn_msg_chain,
-            turn_model_output={
-                **current_turn_state.player_two.turn_model_output,
-                'combats': [*current_turn_state.player_two.turn_model_output.get('combats', []), combat_record]
-            },
-            turn_input=current_turn_state.player_two.turn_input,
-            turn_prompt_chain=current_turn_state.player_two.turn_prompt_chain,
-            turn_prompt_config=current_turn_state.player_two.turn_prompt_config
-        )
+        player_one=new_player_one,
+        player_two=new_player_two,
+        combat_actions=[*current_turn_state.combat_actions, combat_record]
     )
     
-    # Update turns dictionary
-    turns = dict(game_state.turns)
     turns[current_turn] = new_turn_state
+    
+    # Use builder to create new state
+    return (GameState.builder(game_state)
+            .with_world(world)
+            .with_turns(turns)
+            .build())
     
     # Log combat results
     logger.log_combat(

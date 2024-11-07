@@ -1,11 +1,11 @@
 from typing import Dict, Any
 from utils.game_utils import print_game_state
 from game_state import GameState
-from actions.input_action import get_input_action
-from actions.move_action import move_action
-from actions.combat_action import combat_action
-from actions.spawn_action import spawn_action
-from actions.turn_end_action import turn_end_action
+from input_action import get_input_action
+from move_action import move_action
+from combat_action import combat_action
+from spawn_action import spawn_action
+from turn_end_action import turn_end_action
 from utils.event_logger import GameEventLogger
 
 def turn(game_state: GameState) -> GameState:

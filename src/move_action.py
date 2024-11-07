@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Any
-from game_state import GameState, Tile, TurnState
+from game_state import GameState, Tile, TurnState, PlayerState
 from utils.logger import logger
 
 def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
@@ -16,6 +16,8 @@ def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
         1: turn_state.input_moves.get(hex_pos, {}).get(1, []),
         2: turn_state.input_moves.get(hex_pos, {}).get(2, [])
     }
+    
+    move_records = []  # Initialize list of move records
     
     for player_id, player_moves in moves.items():
         for move in player_moves:
@@ -42,28 +44,37 @@ def move_action(game_state: GameState, hex_pos: Tuple[int, int]) -> GameState:
                 units_to_move,
                 player_id
             )
+            
+            # Create move record for each move
+            move_record = {
+                'source': hex_pos,
+                'destination': dest_pos,
+                'units': units_to_move,
+                'player_id': player_id
+            }
+            move_records.append(move_record)
     
-    # Create new turn state with updated world
-    move_record = {
-        'source': hex_pos,
-        'destination': dest_pos,
-        'units': units_to_move,
-        'player_id': player_id
-    }
+    # Update turn state
+    turns = dict(game_state.turns)
     
+    # Update player states using from_state
+    new_player_one = PlayerState.from_state(turn_state.player_one)
+    new_player_two = PlayerState.from_state(turn_state.player_two)
+
     new_turn_state = TurnState(
         turn_number=turn_state.turn_number,
         world=world,
-        player_one=turn_state.player_one,
-        player_two=turn_state.player_two,
+        player_one=new_player_one,
+        player_two=new_player_two,
         input_moves=turn_state.input_moves,
-        move_actions=[*turn_state.move_actions, move_record],  # Add new move to existing moves
+        move_actions=[*turn_state.move_actions, *move_records],
         spawn_actions=turn_state.spawn_actions,
         combat_actions=turn_state.combat_actions
     )
     
-    # Update turns dictionary
-    turns = dict(game_state.turns)
     turns[current_turn] = new_turn_state
     
-    return GameState.from_state(game_state, world=world, turns=turns) 
+    return (GameState.builder(game_state)
+            .with_world(world)
+            .with_turns(turns)
+            .build()) 

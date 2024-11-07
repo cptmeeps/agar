@@ -99,7 +99,12 @@ def get_ai_moves(game_state: GameState, player_id: int) -> Dict[str, Any]:
     
     # Get LLM response
     response = call_llm_api(message_chain)
-    response = json.loads(response)
+    try:
+        response = json.loads(response)
+    except json.JSONDecodeError:
+        print("Error: LLM response is not a valid JSON.")
+        # Optionally handle the error further, e.g., return an empty dictionary or raise an exception
+        return {}
     logger.log_action(
         "ai_move_generation",
         game_state,
@@ -167,31 +172,90 @@ def get_input_action(game_state: GameState, cell_pos: Tuple[int, int]) -> GameSt
                 'units': units_to_move
             })
 
-    # Create new turn state with player states including the moves
+    # Create new player states using from_state
+    new_player_one = PlayerState.from_state(
+        current_turn_state.player_one,
+        turn_model_output={
+            **current_turn_state.player_one.turn_model_output,
+            'moves': player_one_moves.get('moves', [])
+        }
+    )
+
+    new_player_two = PlayerState.from_state(
+        current_turn_state.player_two,
+        turn_model_output={
+            **current_turn_state.player_two.turn_model_output,
+            'moves': player_two_moves.get('moves', [])
+        }
+    )
+
+    # Create new turn state
     new_turn_state = TurnState(
         turn_number=current_turn_state.turn_number,
         world=game_state.world,
-        player_one=PlayerState(
-            player_config=current_turn_state.player_one.player_config,
-            turn_msg_chain=current_turn_state.player_one.turn_msg_chain,
-            turn_model_output=current_turn_state.player_one.turn_model_output,
-            turn_input=current_turn_state.player_one.turn_input,
-            turn_prompt_chain=current_turn_state.player_one.turn_prompt_chain,
-            turn_prompt_config=current_turn_state.player_one.turn_prompt_config
-        ),
-        player_two=PlayerState(
-            player_config=current_turn_state.player_two.player_config,
-            turn_msg_chain=current_turn_state.player_two.turn_msg_chain,
-            turn_model_output=current_turn_state.player_two.turn_model_output,
-            turn_input=current_turn_state.player_two.turn_input,
-            turn_prompt_chain=current_turn_state.player_two.turn_prompt_chain,
-            turn_prompt_config=current_turn_state.player_two.turn_prompt_config
-        ),
+        player_one=new_player_one,
+        player_two=new_player_two,
         input_moves=all_moves
     )
 
-    # Update turns dictionary
+    # Update turns dictionary with new turn state
     turns = dict(game_state.turns)
     turns[current_turn] = new_turn_state
     
-    return GameState.from_state(game_state, turns=turns)
+    return (GameState.builder(game_state)
+            .with_turns(turns)
+            .build())
+
+def main():    
+    # Create a test configuration
+    test_config = {
+        'board_size': 5,
+        'max_turns': 10,
+        'num_players': 2,
+        'player_one_config': {
+            'turn_prompt_config': [{
+                'prompt_filepath': 'prompts/basic_strategy.txt',
+                'template_params': {}
+            }]
+        },
+        'player_two_config': {
+            'turn_prompt_config': [{
+                'prompt_filepath': 'prompts/basic_strategy.txt',
+                'template_params': {}
+            }]
+        }
+    }
+
+    # Create initial game state
+    game_state = GameState.from_config(test_config)
+
+    # Test create_llm_world_representation
+    print("\nTesting world representation for Player 1:")
+    world_rep = create_llm_world_representation(game_state, 1)
+    print(json.dumps(world_rep, indent=2))
+
+    # Test get_ai_moves
+    print("\nTesting AI moves for Player 1:")
+    try:
+        moves = get_ai_moves(game_state, 1)
+        print(json.dumps(moves, indent=2))
+    except Exception as e:
+        print(f"Error getting AI moves: {str(e)}")
+
+    # Test full input action
+    print("\nTesting full input action:")
+    try:
+        new_state = get_input_action(game_state, (0, 0))  # Test coordinates
+        
+        # Print some verification info
+        current_turn = new_state.turns[new_state.current_turn]
+        print("\nPlayer 1 moves:", current_turn.player_one.turn_model_output.get('moves', []))
+        print("\nPlayer 2 moves:", current_turn.player_two.turn_model_output.get('moves', []))
+        print("\nProcessed input moves:", current_turn.input_moves)
+        
+    except Exception as e:
+        print(f"Error in input action: {str(e)}")
+
+if __name__ == "__main__":
+    #python src/actions/input_action.py
+    main()
