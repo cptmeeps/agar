@@ -121,6 +121,31 @@ def main():
         print(f"Role: {message['role']}")
         print(f"Content:\n  {message['content'].replace('\n', '\n      ')}")
     print("\n✅ Successfully generated prompt chain")
+    
+    print("\n3. Testing compose_prompt with multiple template files")
+    print("Expected: Should create a chain combining all specified prompt files")
+    
+    multi_file_configs = [
+        {'prompt_filepath': 'purpose_system.txt'},
+        {'prompt_filepath': 'board_system.txt'},
+        {'prompt_filepath': 'rules_system.txt'},
+        {'prompt_filepath': 'strategic_system.txt'},
+        {'prompt_filepath': 'nshot_1.txt'},
+        {'prompt_filepath': 'base_input.txt', 'template_params': {
+            'world_representation': example_world_representation
+        }}
+    ]
+    
+    # Generate prompt chain
+    multi_file_chain = generate_prompt_chain(multi_file_configs)
+    
+    print("\nGenerated multi-file prompt chain:")
+    print(f"Total messages: {len(multi_file_chain)}")
+    for idx, message in enumerate(multi_file_chain, 1):
+        print(f"\n{idx}. Message:")
+        print(f"Role: {message['role']}")
+        print(f"Content preview: {message['content'][:100]}...")
+    print("\n✅ Successfully generated multi-file prompt chain")
 
 if __name__ == "__main__":
     main()    

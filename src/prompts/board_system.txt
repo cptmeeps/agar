@@ -1,0 +1,72 @@
+- name: board_system
+  role: system
+  content: |
+    Board representation:
+    - Each cell is identified by coordinates "x,y"
+    - Each cell contains unit counts for both players
+    - Game info includes current turn and max turns
+    - Cell control is determined by exclusive unit presence
+    
+    Board representation example:
+      Current game state:
+          game_info:
+        current_turn: 1
+        max_turns: 10
+        game_status: in_progress
+      board:
+        controlled_territories:
+          your_territory:
+          - x: 0
+            y: 2
+          enemy_territory:
+          - x: 4
+            y: 2
+        cells:
+          0,0:
+            position:
+              x: 0
+              y: 0
+            units:
+              your_units: 0
+              enemy_units: 0
+            controlled_by: null
+          0,1:
+            position:
+              x: 0
+              y: 1
+            units:
+              your_units: 0
+              enemy_units: 0
+            controlled_by: null
+          0,2:
+            position:
+              x: 0
+              y: 2
+            units:
+              your_units: 1
+              enemy_units: 0
+            controlled_by: you
+          0,3:
+            position:
+              x: 0
+              y: 3
+            units:
+              your_units: 0
+              enemy_units: 0
+            controlled_by: null
+          0,4:
+            position:
+              x: 0
+              y: 4
+            units:
+              your_units: 0
+              enemy_units: 0
+            controlled_by: null
+          1,0:
+            position:
+              x: 1
+              y: 0
+            units:
+              your_units: 0
+              enemy_units: 0
+            controlled_by: null

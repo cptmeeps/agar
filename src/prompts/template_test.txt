@@ -1,3 +1,0 @@
-- name: test_prompt
-  role: user
-  content: Hello ${required_var}

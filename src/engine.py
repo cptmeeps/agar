@@ -103,6 +103,14 @@ def turn(game_state: GameState) -> GameState:
     # Print world summary
     new_state.print_world()
 
+    # Print scores
+    print("\nScores:")
+    print("-" * 40)
+    print("Player\tScore")
+    for player_id, score in new_state.scores.items():
+        print(f"{player_id}\t{score}")
+    print()
+
     # Log the final turn state
     logger.log_turn_state(new_state, new_state.turns[new_state.current_turn])
     

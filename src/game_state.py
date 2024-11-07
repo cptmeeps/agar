@@ -48,6 +48,7 @@ class TurnState:
     move_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'source': (x,y), 'destination': (x,y), 'units': n, 'player_id': id}, ...]
     spawn_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'position': (x,y), 'player_id': id}, ...]
     combat_actions: List[Dict[str, Any]] = field(default_factory=list)  # Structure: [{'position': (x,y), 'player_1_casualties': n, 'player_2_casualties': n}, ...]
+    scores: Dict[int, int] = field(default_factory=lambda: {1: 0, 2: 0})  # Added scores field
 
 @dataclass(frozen=True)
 class SpawnStateChange:
@@ -70,6 +71,7 @@ class GameState:
     player_one_config: Dict[str, Any]
     player_two_config: Dict[str, Any]
     turns: Dict[int, TurnState]
+    scores: Dict[int, int] = field(default_factory=lambda: {1: 0, 2: 0})  # Added scores field
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> 'GameState':
@@ -122,7 +124,8 @@ class GameState:
             game_end_criteria=config.get('end_criteria', {'type': 'elimination'}),
             player_one_config=config.get('player_one_config', {}),
             player_two_config=config.get('player_two_config', {}),
-            turns=turns
+            turns=turns,
+            scores={i: 0 for i in range(1, config.get('num_players', 2) + 1)}  # Initialize scores
         )
 
     @classmethod
@@ -200,7 +203,30 @@ class GameState:
         # Print separator line
         print("    " + "-" * ((max_x - min_x + 1) * 6 + 1))
         print("     " + "P1 P2 " * (max_x - min_x + 1))
-        print()
+
+    def calculate_scores(self) -> Dict[int, int]:
+        """
+        Calculate scores for each player based on:
+        - 2 points for each fully controlled hex
+        - 1 point for each unit
+        """
+        scores = {i: 0 for i in range(1, self.num_players + 1)}
+        
+        for tile in self.world.values():
+            # Count units per player in this tile
+            units_per_player = {i: 0 for i in range(1, self.num_players + 1)}
+            for unit in tile.units:
+                units_per_player[unit.player_id] += 1
+                # Add 1 point for each unit
+                scores[unit.player_id] += 1
+            
+            # Check if any player fully controls the hex
+            players_present = [pid for pid, count in units_per_player.items() if count > 0]
+            if len(players_present) == 1:  # Only one player has units here
+                # Add 2 points for hex control
+                scores[players_present[0]] += 2
+                
+        return scores
 
 class GameStateBuilder:
     def __init__(self, original_state: GameState):

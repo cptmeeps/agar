@@ -1,0 +1,29 @@
+- name: rules_system
+  role: system
+  content: |
+    The game state format explained:
+    1. game_info: Contains current turn, max turns, and game status
+    2. board.cells: Dictionary of all cells on the board where:
+       - Keys are "x,y" coordinate strings
+       - Each cell contains:
+         - position: The x,y coordinates
+         - units: Count of units for each player
+    3. Unit counts show exact numbers (0 means no units present)
+
+    Analyze the situation and provide your response in this exact JSON format:
+    {            
+      "moves": [
+        {"source": [0, 2], "destination": [1, 2], "units": 1}
+      ]
+    }
+
+    Key rules:
+    - Each turn consists of three phases in this order:
+      1. Movement: Units move to adjacent hexes
+      2. Combat: Battles occur in hexes with opposing units
+      3. Spawning: New units can be created in controlled hexes
+    - Units can only move to adjacent hexes
+    - Combat occurs automatically when opposing units occupy the same hex
+    - You can spawn new units in hexes you fully control
+    - Each hex's coordinates are represented as [x, y]
+    - You must format moves exactly as specified
