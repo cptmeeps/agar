@@ -1,7 +1,3 @@
-- name: test_system_prompt
-  role: system
-  content: You are a helpful assistant.
-
 - name: test_input_prompt
   role: user
   content: |

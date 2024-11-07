@@ -1,5 +1,4 @@
 from typing import Dict, Any
-from utils.game_utils import print_game_state
 from game_state import GameState
 from input_action import get_input_action
 from move_action import move_action
@@ -134,7 +133,7 @@ def main():
         'player_one_config': {
             'turn_prompt_config': [
                 {
-                    'prompt_filepath': 'game_prompts.txt',
+                    'prompt_filepath': 'expansion.txt',
                     'template_params': {}
                 }
             ]
@@ -142,7 +141,7 @@ def main():
         'player_two_config': {
             'turn_prompt_config': [
                 {
-                    'prompt_filepath': 'game_prompts.txt',
+                    'prompt_filepath': 'attack.txt',
                     'template_params': {}
                 }
             ]

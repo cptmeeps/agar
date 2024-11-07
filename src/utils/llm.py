@@ -98,11 +98,13 @@ def process_model_output(response: Any) -> str:
   return response.content[0].text
 
 def pretty_print_message_chain(message_chain: List[Dict[str, str]]) -> None:
-  for i, message in enumerate(message_chain):
-    print(f"Message {i + 1}:")
-    print(f"  Role: {message['role']}")
-    print(f"  Content:\n{message['content']}")
-    print("-" * 50)
+    print("\n\n" + "-" * 40)
+    print("Generated prompt chain:")
+    print("Messages:")
+    for idx, message in enumerate(message_chain, 1):
+        print(f"\n{idx}. Message:")
+        print(f"Role: {message['role']}")
+        print(f"Content:\n      {message['content'].replace('\n', '\n      ')}")
 
 # Main section with example usage
 if __name__ == "__main__":
