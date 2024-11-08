@@ -1,0 +1,511 @@
+final_scores:
+  1: 83
+  2: 38
+player_one_config:
+  turn_prompt_config:
+  - prompt_filepath: expansion.txt
+    template_params:
+      world_representation:
+        board:
+          cells:
+            0,0:
+              controlled_by: you
+              position:
+                x: 0
+                y: 0
+              units:
+                enemy_units: 0
+                your_units: 3
+            0,1:
+              controlled_by: you
+              position:
+                x: 0
+                y: 1
+              units:
+                enemy_units: 0
+                your_units: 3
+            0,2:
+              controlled_by: you
+              position:
+                x: 0
+                y: 2
+              units:
+                enemy_units: 0
+                your_units: 3
+            0,3:
+              controlled_by: you
+              position:
+                x: 0
+                y: 3
+              units:
+                enemy_units: 0
+                your_units: 4
+            0,4:
+              controlled_by: you
+              position:
+                x: 0
+                y: 4
+              units:
+                enemy_units: 0
+                your_units: 4
+            1,0:
+              controlled_by: enemy
+              position:
+                x: 1
+                y: 0
+              units:
+                enemy_units: 4
+                your_units: 0
+            1,1:
+              controlled_by: enemy
+              position:
+                x: 1
+                y: 1
+              units:
+                enemy_units: 2
+                your_units: 0
+            1,2:
+              controlled_by: you
+              position:
+                x: 1
+                y: 2
+              units:
+                enemy_units: 0
+                your_units: 3
+            1,3:
+              controlled_by: you
+              position:
+                x: 1
+                y: 3
+              units:
+                enemy_units: 0
+                your_units: 3
+            1,4:
+              controlled_by: you
+              position:
+                x: 1
+                y: 4
+              units:
+                enemy_units: 0
+                your_units: 6
+            2,0:
+              controlled_by: null
+              position:
+                x: 2
+                y: 0
+              units:
+                enemy_units: 2
+                your_units: 2
+            2,1:
+              controlled_by: null
+              position:
+                x: 2
+                y: 1
+              units:
+                enemy_units: 1
+                your_units: 1
+            2,2:
+              controlled_by: null
+              position:
+                x: 2
+                y: 2
+              units:
+                enemy_units: 1
+                your_units: 1
+            2,3:
+              controlled_by: enemy
+              position:
+                x: 2
+                y: 3
+              units:
+                enemy_units: 3
+                your_units: 0
+            2,4:
+              controlled_by: you
+              position:
+                x: 2
+                y: 4
+              units:
+                enemy_units: 0
+                your_units: 3
+            3,0:
+              controlled_by: you
+              position:
+                x: 3
+                y: 0
+              units:
+                enemy_units: 0
+                your_units: 3
+            3,1:
+              controlled_by: enemy
+              position:
+                x: 3
+                y: 1
+              units:
+                enemy_units: 2
+                your_units: 0
+            3,2:
+              controlled_by: enemy
+              position:
+                x: 3
+                y: 2
+              units:
+                enemy_units: 2
+                your_units: 0
+            3,3:
+              controlled_by: enemy
+              position:
+                x: 3
+                y: 3
+              units:
+                enemy_units: 2
+                your_units: 0
+            3,4:
+              controlled_by: you
+              position:
+                x: 3
+                y: 4
+              units:
+                enemy_units: 0
+                your_units: 2
+            4,0:
+              controlled_by: you
+              position:
+                x: 4
+                y: 0
+              units:
+                enemy_units: 0
+                your_units: 3
+            4,1:
+              controlled_by: null
+              position:
+                x: 4
+                y: 1
+              units:
+                enemy_units: 0
+                your_units: 0
+            4,2:
+              controlled_by: you
+              position:
+                x: 4
+                y: 2
+              units:
+                enemy_units: 0
+                your_units: 2
+            4,3:
+              controlled_by: enemy
+              position:
+                x: 4
+                y: 3
+              units:
+                enemy_units: 2
+                your_units: 0
+            4,4:
+              controlled_by: null
+              position:
+                x: 4
+                y: 4
+              units:
+                enemy_units: 0
+                your_units: 0
+          controlled_territories:
+            enemy_territory:
+            - x: 1
+              y: 0
+            - x: 1
+              y: 1
+            - x: 2
+              y: 3
+            - x: 3
+              y: 1
+            - x: 3
+              y: 2
+            - x: 3
+              y: 3
+            - x: 4
+              y: 3
+            your_territory:
+            - x: 0
+              y: 0
+            - x: 0
+              y: 1
+            - x: 0
+              y: 2
+            - x: 0
+              y: 3
+            - x: 0
+              y: 4
+            - x: 1
+              y: 2
+            - x: 1
+              y: 3
+            - x: 1
+              y: 4
+            - x: 2
+              y: 4
+            - x: 3
+              y: 0
+            - x: 3
+              y: 4
+            - x: 4
+              y: 0
+            - x: 4
+              y: 2
+        game_info:
+          current_turn: 10
+          game_status: in_progress
+          max_turns: 10
+player_two_config:
+  turn_prompt_config:
+  - prompt_filepath: attack.txt
+    template_params:
+      world_representation:
+        board:
+          cells:
+            0,0:
+              controlled_by: enemy
+              position:
+                x: 0
+                y: 0
+              units:
+                enemy_units: 3
+                your_units: 0
+            0,1:
+              controlled_by: enemy
+              position:
+                x: 0
+                y: 1
+              units:
+                enemy_units: 3
+                your_units: 0
+            0,2:
+              controlled_by: enemy
+              position:
+                x: 0
+                y: 2
+              units:
+                enemy_units: 3
+                your_units: 0
+            0,3:
+              controlled_by: enemy
+              position:
+                x: 0
+                y: 3
+              units:
+                enemy_units: 4
+                your_units: 0
+            0,4:
+              controlled_by: enemy
+              position:
+                x: 0
+                y: 4
+              units:
+                enemy_units: 4
+                your_units: 0
+            1,0:
+              controlled_by: you
+              position:
+                x: 1
+                y: 0
+              units:
+                enemy_units: 0
+                your_units: 4
+            1,1:
+              controlled_by: you
+              position:
+                x: 1
+                y: 1
+              units:
+                enemy_units: 0
+                your_units: 2
+            1,2:
+              controlled_by: enemy
+              position:
+                x: 1
+                y: 2
+              units:
+                enemy_units: 3
+                your_units: 0
+            1,3:
+              controlled_by: enemy
+              position:
+                x: 1
+                y: 3
+              units:
+                enemy_units: 3
+                your_units: 0
+            1,4:
+              controlled_by: enemy
+              position:
+                x: 1
+                y: 4
+              units:
+                enemy_units: 6
+                your_units: 0
+            2,0:
+              controlled_by: null
+              position:
+                x: 2
+                y: 0
+              units:
+                enemy_units: 2
+                your_units: 2
+            2,1:
+              controlled_by: null
+              position:
+                x: 2
+                y: 1
+              units:
+                enemy_units: 1
+                your_units: 1
+            2,2:
+              controlled_by: null
+              position:
+                x: 2
+                y: 2
+              units:
+                enemy_units: 1
+                your_units: 1
+            2,3:
+              controlled_by: you
+              position:
+                x: 2
+                y: 3
+              units:
+                enemy_units: 0
+                your_units: 3
+            2,4:
+              controlled_by: enemy
+              position:
+                x: 2
+                y: 4
+              units:
+                enemy_units: 3
+                your_units: 0
+            3,0:
+              controlled_by: enemy
+              position:
+                x: 3
+                y: 0
+              units:
+                enemy_units: 3
+                your_units: 0
+            3,1:
+              controlled_by: you
+              position:
+                x: 3
+                y: 1
+              units:
+                enemy_units: 0
+                your_units: 2
+            3,2:
+              controlled_by: you
+              position:
+                x: 3
+                y: 2
+              units:
+                enemy_units: 0
+                your_units: 2
+            3,3:
+              controlled_by: you
+              position:
+                x: 3
+                y: 3
+              units:
+                enemy_units: 0
+                your_units: 2
+            3,4:
+              controlled_by: enemy
+              position:
+                x: 3
+                y: 4
+              units:
+                enemy_units: 2
+                your_units: 0
+            4,0:
+              controlled_by: enemy
+              position:
+                x: 4
+                y: 0
+              units:
+                enemy_units: 3
+                your_units: 0
+            4,1:
+              controlled_by: null
+              position:
+                x: 4
+                y: 1
+              units:
+                enemy_units: 0
+                your_units: 0
+            4,2:
+              controlled_by: enemy
+              position:
+                x: 4
+                y: 2
+              units:
+                enemy_units: 2
+                your_units: 0
+            4,3:
+              controlled_by: you
+              position:
+                x: 4
+                y: 3
+              units:
+                enemy_units: 0
+                your_units: 2
+            4,4:
+              controlled_by: null
+              position:
+                x: 4
+                y: 4
+              units:
+                enemy_units: 0
+                your_units: 0
+          controlled_territories:
+            enemy_territory:
+            - x: 0
+              y: 0
+            - x: 0
+              y: 1
+            - x: 0
+              y: 2
+            - x: 0
+              y: 3
+            - x: 0
+              y: 4
+            - x: 1
+              y: 2
+            - x: 1
+              y: 3
+            - x: 1
+              y: 4
+            - x: 2
+              y: 4
+            - x: 3
+              y: 0
+            - x: 3
+              y: 4
+            - x: 4
+              y: 0
+            - x: 4
+              y: 2
+            your_territory:
+            - x: 1
+              y: 0
+            - x: 1
+              y: 1
+            - x: 2
+              y: 3
+            - x: 3
+              y: 1
+            - x: 3
+              y: 2
+            - x: 3
+              y: 3
+            - x: 4
+              y: 3
+        game_info:
+          current_turn: 10
+          game_status: in_progress
+          max_turns: 10

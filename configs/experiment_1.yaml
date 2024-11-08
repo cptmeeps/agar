@@ -1,5 +1,5 @@
 experiment_name: "aggressive_vs_expansion"
-iterations: 10
+iterations: 3
 player_one_config:
   turn_prompt_config:
     - prompt_filepath: "attack.txt"
