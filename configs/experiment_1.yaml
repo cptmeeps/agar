@@ -1,0 +1,10 @@
+experiment_name: "aggressive_vs_expansion"
+iterations: 10
+player_one_config:
+  turn_prompt_config:
+    - prompt_filepath: "attack.txt"
+      template_params: {}
+player_two_config:
+  turn_prompt_config:
+    - prompt_filepath: "expansion.txt"
+      template_params: {} 
