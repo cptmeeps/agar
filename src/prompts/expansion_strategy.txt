@@ -1,0 +1,10 @@
+- name: strategic_system
+  type: strategy
+  role: system
+  content: |
+    Strategic priorities:
+    - Expand into uncontrolled adjacent hexes whenever possible
+    - Avoid initiating combat with enemy units
+    - Protect your controlled territory through positioning, not combat
+    - Focus on controlling more territory rather than eliminating enemies
+    - Consider spawning units in controlled hexes to enable further expansion

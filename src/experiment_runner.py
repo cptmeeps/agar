@@ -41,6 +41,11 @@ def run_experiment(experiment_config: Dict[str, Any], results_dir: Path) -> List
         player_two_name = player_two_config.get('name', f"Player_{pair_idx}_2")
         print(f"\nRunning games between {player_one_name} and {player_two_name}")
         matchup_results = []
+
+        # Update the player configs to match the new format if needed
+        player_one_config = preprocess_player_config(player_one_config)
+        player_two_config = preprocess_player_config(player_two_config)
+
         for i in range(iterations):
             print(f"Running iteration {i+1}/{iterations}")
             # Create initial game state with the experiment's configurations
@@ -94,6 +99,22 @@ def save_experiment_results(experiment_results: List[GameState], results_dir: Pa
 
     with open(experiment_results_path, 'w') as f:
         yaml.dump(experiment_results_data, f)
+
+def preprocess_player_config(player_config: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Preprocesses the player configuration to ensure it has the correct format.
+    Converts turn_prompt_config from a list of strings to a list of dicts if necessary.
+    """
+    turn_prompt_config = player_config.get('turn_prompt_config', [])
+
+    # Check if the first element is a string, indicating the new format
+    if turn_prompt_config and isinstance(turn_prompt_config[0], str):
+        # Convert to list of dicts with default template_params
+        player_config['turn_prompt_config'] = [
+            {'prompt_filepath': filepath, 'template_params': {}} for filepath in turn_prompt_config
+        ]
+
+    return player_config
 
 def main():
     # Load experiment configuration from a file

@@ -1,5 +1,5 @@
 experiment_name: "test_experiment"
 iterations: 2
 player_config_files:
-  - "configs/players/player_group_1.yaml"
-# Make sure to remove or comment out any references to 'player_group_2.yaml'
+  - "configs/players/test_group_single.yaml"
+  - "configs/players/expand_with_multiple_prompts.yaml"

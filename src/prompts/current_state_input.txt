@@ -1,0 +1,7 @@
+- name: current_state_input
+  type: input
+  role: user
+  content: |
+    Current game state:
+    ${world_representation}
+    Your response must be valid JSON. 

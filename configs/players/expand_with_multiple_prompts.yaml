@@ -1,0 +1,9 @@
+player_configs:
+  - name: "Expansion_MultiPrompt_Player"
+    turn_prompt_config:
+      - "purpose_system.txt"
+      - "rules_system.txt"
+      - "board_system.txt"
+      - "expansion_strategy.txt"
+      - "nshot_1.txt"
+      - "current_state_input.txt" 

@@ -1,0 +1,4 @@
+player_configs:
+  - name: "attack_single_prompt_test"
+    turn_prompt_config:
+      - "attack.txt"
