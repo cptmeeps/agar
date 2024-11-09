@@ -1,3 +1,11 @@
+# Ignore all files within results/ and logs/
+results/*
+logs/*
+
+# Exclude the directories themselves so they are included in the repository
+!results/
+!logs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
