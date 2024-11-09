@@ -1,4 +1,5 @@
 - name: test_input_prompt
+  type: test
   role: user
   content: |
     The world state is:

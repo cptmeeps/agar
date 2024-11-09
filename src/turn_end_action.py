@@ -76,12 +76,14 @@ def main():
         'max_turns': 3,  # Small number to test max turns condition
         'num_players': 2,
         'player_one_config': {
+            'name': 'TurnEnd_Test_Player_One',
             'turn_prompt_config': [{
                 'prompt_filepath': 'test_prompts.txt',
                 'template_params': {}
             }]
         },
         'player_two_config': {
+            'name': 'TurnEnd_Test_Player_Two',
             'turn_prompt_config': [{
                 'prompt_filepath': 'test_prompts.txt',
                 'template_params': {}

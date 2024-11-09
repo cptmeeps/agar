@@ -1,4 +1,5 @@
 - name: board_system
+  type: world
   role: system
   content: |
     Board representation:

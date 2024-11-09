@@ -213,12 +213,14 @@ def main():
         'max_turns': 10,
         'num_players': 2,
         'player_one_config': {
+            'name': 'Test_Player_One',
             'turn_prompt_config': [{
                 'prompt_filepath': 'test_prompts.txt',
                 'template_params': {}
             }]
         },
         'player_two_config': {
+            'name': 'Test_Player_Two',
             'turn_prompt_config': [{
                 'prompt_filepath': 'test_prompts.txt',
                 'template_params': {}

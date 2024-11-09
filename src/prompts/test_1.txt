@@ -1,3 +1,4 @@
 - name: test_system_prompt
+  type: test
   role: system
   content: You are a helpful assistant.

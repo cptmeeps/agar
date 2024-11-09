@@ -1,4 +1,5 @@
 - name: strategic_system
+  type: strategy
   role: system
   content: |
     Strategic priorities:

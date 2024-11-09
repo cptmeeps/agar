@@ -24,6 +24,7 @@ class Tile:
 
 @dataclass(frozen=True)
 class PlayerState:
+    name: str
     player_config: Dict[str, Any] = field(default_factory=dict)
     turn_msg_chain: List[Dict[str, str]] = field(default_factory=list)
     turn_model_output: Dict[str, Any] = field(default_factory=lambda: {'moves': []})
@@ -89,7 +90,7 @@ class GameState:
                         Unit(player_id=1, health=1, movement_points=1),
                         Unit(player_id=1, health=1, movement_points=1)
                     ]
-                # Add player 2's unit at (4, 2) - right side
+                # Add player 2's unit at (size-1, 2) - right side
                 elif x == size-1 and y == 2:
                     units = [
                         Unit(player_id=2, health=1, movement_points=1),
@@ -101,15 +102,20 @@ class GameState:
         # Create all TurnStates from 1 to max_turns
         max_turns = config.get('max_turns', 10)
         turns = {}
+        player_one_name = config.get('player_one_config', {}).get('name', 'Player 1')
+        player_two_name = config.get('player_two_config', {}).get('name', 'Player 2')
+
         for turn_num in range(1, max_turns + 1):
             turns[turn_num] = TurnState(
                 turn_number=turn_num,
                 world=world,
                 player_one=PlayerState(
+                    name=player_one_name,  # Set player one name
                     player_config=config.get('player_one_config', {}),
                     turn_prompt_config=config.get('player_one_config', {}).get('turn_prompt_config', [])
                 ),
                 player_two=PlayerState(
+                    name=player_two_name,  # Set player two name
                     player_config=config.get('player_two_config', {}),
                     turn_prompt_config=config.get('player_two_config', {}).get('turn_prompt_config', [])
                 )
@@ -135,7 +141,7 @@ class GameState:
         state_dict.update(updates)
         return cls(**state_dict)
 
-    def is_valid_state_change(self, new_state: 'GameState', phase: str | None = None) -> bool:
+    def is_valid_state_change(self, new_state: 'GameState', phase: Optional[str] = None) -> bool:
         # TODO: Implement validation logic for each phase
         # For now, always return True
         return True
@@ -260,6 +266,6 @@ class GameEvent:
         COMBAT = "combat"
         MOVE = "move"
         
-    def __init__(self, type: Type, data: Dict[str, Any]):
+    def __init__(self, type: 'GameEvent.Type', data: Dict[str, Any]):
         self.type = type
         self.data = data

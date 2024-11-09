@@ -1,4 +1,5 @@
 - name: rules_system
+  type: game_rules
   role: system
   content: |
     The game state format explained:

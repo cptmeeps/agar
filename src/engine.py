@@ -139,6 +139,7 @@ def main():
         'num_players': 2,
         'end_criteria': {'type': 'elimination'},
         'player_one_config': {
+            'name': 'Player_One',
             'turn_prompt_config': [
                 {
                     'prompt_filepath': 'expansion.txt',
@@ -147,6 +148,7 @@ def main():
             ]
         },
         'player_two_config': {
+            'name': 'Player_Two',
             'turn_prompt_config': [
                 {
                     'prompt_filepath': 'attack.txt',

@@ -1,0 +1,9 @@
+player_configs:
+  - name: "Player_A"
+    turn_prompt_config:
+      - prompt_filepath: "expansion.txt"
+        template_params: {}
+  - name: "Player_B"
+    turn_prompt_config:
+      - prompt_filepath: "attack.txt"
+        template_params: {}
