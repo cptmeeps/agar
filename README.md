@@ -1,6 +1,6 @@
 # Hexagonal Strategy Game
 
-A turn-based strategy game built using functional programming principles in Python, featuring AI-driven players powered by Claude 3.5 Sonnet.
+A turn-based strategy game built using functional programming principles in Python, featuring AI-driven players.
 
 ## Overview
 
